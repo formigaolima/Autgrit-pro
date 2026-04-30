@@ -1,0 +1,8 @@
+{
+  "name": "AUTGRIT — Global AI Super App",
+  "description": "AI-driven Super App offering Ride-Hailing, Delivery, Physical/Digital Services, and Sober Driver, featuring AI security and crypto payments.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}
