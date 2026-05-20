@@ -31,70 +31,71 @@ import { NotificationCenter, SystemAlert } from './components/NotificationCenter
 import { DeliveryModule } from './components/DeliveryModule';
 import { MarketplaceModule } from './components/MarketplaceModule';
 import { PaymentModule } from './components/PaymentModule';
+import { useTranslation } from './lib/i18n';
 import { Bell, Command as CommandIcon, ShoppingCart, CreditCard, HeartPulse, GraduationCap, Package, Github, Twitter, Linkedin } from 'lucide-react';
 
 const SERVICES = [
   {
     id: 'ride',
-    title: 'Ride-Hailing',
-    description: 'Smart mobility for urban explorers. Real-time AI routing and premium fleet.',
+    titleKey: 'service_ride_title' as const,
+    descKey: 'service_ride_desc' as const,
     icon: Car,
     color: 'from-blue-500 to-cyan-400'
   },
   {
     id: 'delivery',
-    title: 'Express Delivery',
-    description: 'Everything you need, delivered in minutes. Food, groceries, and parcels.',
+    titleKey: 'service_delivery_title' as const,
+    descKey: 'service_delivery_desc' as const,
     icon: Truck,
     color: 'from-orange-500 to-yellow-400'
   },
   {
     id: 'sober',
-    title: 'Driver Sóbrio',
-    description: 'Our most innovative service. We drive your car home when you shouldn\'t.',
+    titleKey: 'service_sober_title' as const,
+    descKey: 'service_sober_desc' as const,
     icon: ShieldCheck,
     color: 'from-emerald-500 to-teal-400',
     highlight: true
   },
   {
     id: 'physical',
-    title: 'Local Services',
-    description: 'Handmen, cleaning, and repairs. Skilled professionals at your fingertips.',
+    titleKey: 'service_physical_title' as const,
+    descKey: 'service_physical_desc' as const,
     icon: Hammer,
     color: 'from-indigo-500 to-purple-400'
   },
   {
     id: 'digital',
-    title: 'Digital Portal',
-    description: 'Connect with global digital talent. Freelancing, consulting, and more.',
+    titleKey: 'service_digital_title' as const,
+    descKey: 'service_digital_desc' as const,
     icon: Globe,
     color: 'from-pink-500 to-rose-400'
   },
   {
     id: 'marketplace',
-    title: 'Mercato',
-    description: 'High-integrity decentralized product registry. Secure urban hardware & tech.',
+    titleKey: 'service_marketplace_title' as const,
+    descKey: 'service_marketplace_desc' as const,
     icon: ShoppingCart,
     color: 'from-amber-600 to-orange-500'
   },
   {
     id: 'payment',
-    title: 'Pago',
-    description: 'Unified secure payment & asset management. Instant p2p tactical transfers.',
+    titleKey: 'service_payment_title' as const,
+    descKey: 'service_payment_desc' as const,
     icon: CreditCard,
     color: 'from-emerald-600 to-cyan-500'
   },
   {
     id: 'health',
-    title: 'Med-Link',
-    description: 'Secure health monitoring and autonomous medical logistics deployment.',
+    titleKey: 'service_health_title' as const,
+    descKey: 'service_health_desc' as const,
     icon: HeartPulse,
     color: 'from-red-500 to-rose-400'
   },
   {
     id: 'education',
-    title: 'Ed-Chain',
-    description: 'Decentralized knowledge matrix. Skills certification and global talent relay.',
+    titleKey: 'service_education_title' as const,
+    descKey: 'service_education_desc' as const,
     icon: GraduationCap,
     color: 'from-blue-600 to-indigo-500'
   }
@@ -102,23 +103,24 @@ const SERVICES = [
 
 const FEATURES = [
   {
-    title: 'AI Security Shield',
-    description: 'Real-time monitoring and threat detection for every trip and service.',
+    titleKey: 'feature_shield_title' as const,
+    descKey: 'feature_shield_desc' as const,
     icon: Cpu
   },
   {
-    title: 'Dual-Currency Payments',
-    description: 'Seamlessly switch between FIAT and Crypto. No borders, no friction.',
+    titleKey: 'feature_payments_title' as const,
+    descKey: 'feature_payments_desc' as const,
     icon: Wallet
   },
   {
-    title: 'Professional Rewards',
-    description: 'A points-based ecosystem rewarding excellence and reliability.',
+    titleKey: 'feature_rewards_title' as const,
+    descKey: 'feature_rewards_desc' as const,
     icon: Star
   }
 ];
 
 export default function App() {
+  const { t, currentLanguage, setLanguage, isTranslating, supportedLanguages } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeModule, setActiveModule] = useState<'idle' | 'ride' | 'delivery' | 'sober' | 'marketplace' | 'payment'>('idle');
@@ -250,9 +252,9 @@ export default function App() {
                   <div className="w-14 h-14 bg-primary/10 border border-primary/30 text-primary flex items-center justify-center mx-auto mb-6">
                     <ShieldCheck className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-heading font-bold text-foreground mb-2 uppercase tracking-widest">TX_AUTHORIZATION</h3>
+                  <h3 className="text-lg font-heading font-bold text-foreground mb-2 uppercase tracking-widest">{t('tx_auth')}</h3>
                   <p className="text-[10px] text-slate-400 uppercase tracking-widest leading-relaxed mb-6 font-bold">
-                    Service: {pendingService?.title}<br/>
+                    Service: {pendingService?.titleKey ? t(pendingService.titleKey) : pendingService?.title}<br/>
                     Network_Fee: <span className="text-primary font-bold">0.0012 ETH</span>
                   </p>
                   <div className="flex gap-3">
@@ -261,13 +263,13 @@ export default function App() {
                       onClick={() => setPaymentStep('idle')}
                       className="flex-1 h-12 uppercase tracking-widest text-[10px] border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-primary transition-colors font-bold"
                     >
-                      Reject
+                      {t('reject')}
                     </Button>
                     <Button 
                       onClick={executeTransaction}
                       className="flex-1 h-12 bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20"
                     >
-                      Sign_Hash
+                      {t('sign_hash')}
                     </Button>
                   </div>
                 </>
@@ -276,8 +278,8 @@ export default function App() {
               {paymentStep === 'processing' && (
                 <>
                   <div className="w-14 h-14 border-2 border-primary border-t-transparent animate-spin mx-auto mb-6 rounded-full" />
-                  <h3 className="text-lg font-heading font-bold text-foreground mb-2 uppercase tracking-widest">MINING_TRANSACTION</h3>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest leading-relaxed font-bold">Broadcasting signature to Ethereum_Consensus...</p>
+                  <h3 className="text-lg font-heading font-bold text-foreground mb-2 uppercase tracking-widest">{t('mining_tx')}</h3>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest leading-relaxed font-bold">{t('broadcasting')}</p>
                 </>
               )}
 
@@ -286,8 +288,8 @@ export default function App() {
                   <div className="w-14 h-14 bg-emerald-50 border border-emerald-500/20 text-emerald-500 flex items-center justify-center mx-auto mb-6 rounded-lg">
                     <Zap className="w-8 h-8 fill-current" />
                   </div>
-                  <h3 className="text-lg font-heading font-bold text-foreground mb-2 uppercase tracking-widest text-emerald-500">TX_CONFIRMED</h3>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest leading-relaxed font-bold">Handshake complete. Node access granted.</p>
+                  <h3 className="text-lg font-heading font-bold text-foreground mb-2 uppercase tracking-widest text-emerald-500">{t('tx_confirmed')}</h3>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest leading-relaxed font-bold">{t('handshake_ok')}</p>
                 </>
               )}
             </motion.div>
@@ -320,44 +322,69 @@ export default function App() {
       </AnimatePresence>
 
       {/* Navigation / Header */}
-      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 border-b border-slate-100 bg-white/80 backdrop-blur-md p-8`}>
-        <div className="container mx-auto flex justify-between items-end pb-6">
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 border-b border-slate-100 bg-white/80 backdrop-blur-md px-4 py-4 md:px-8 md:py-6`}>
+        <div className="container mx-auto flex justify-between items-center md:items-end md:pb-2">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary flex items-center justify-center p-2">
-              <div className="w-full h-full border-2 border-white flex items-center justify-center font-bold text-white text-xl tracking-tighter">AG</div>
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-primary flex items-center justify-center p-1.5 md:p-2">
+              <div className="w-full h-full border border-white flex items-center justify-center font-bold text-white text-base md:text-xl tracking-tighter">AG</div>
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-[0.2em] text-foreground uppercase m-0">AUTGRIT <span className="text-primary font-light">PRO</span></h1>
-              <p className="text-[10px] text-slate-500 uppercase tracking-[0.4em] leading-none mt-1">High-Resilience Automated Control Interface</p>
+              <h1 className="text-lg md:text-2xl font-bold tracking-[0.2em] text-foreground uppercase m-0">{t('app_title')} <span className="text-primary font-light">PRO</span></h1>
+              <p className="text-[8px] md:text-[10px] text-slate-500 uppercase tracking-[0.4em] leading-none mt-1">{t('app_subtitle')}</p>
             </div>
           </div>
 
           <div className="hidden md:grid grid-cols-3 gap-12 text-right">
             <div className="space-y-1">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">System Load</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">{t('system_load')}</p>
               <p className="text-sm font-mono text-primary">{stats.load}</p>
             </div>
             <div className="space-y-1 border-l border-slate-100 pl-12">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Uptime</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">{t('uptime')}</p>
               <p className="text-sm font-mono text-foreground">{stats.uptime}</p>
             </div>
             <div className="space-y-1 border-l border-slate-100 pl-12">
-              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Protocol</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">{t('protocol')}</p>
               <p className="text-sm font-mono text-foreground">AG-SEC-V1</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             <div className="hidden md:flex gap-4">
+               {/* Language Selector Dropdown */}
+               <div className="relative group">
+                 <button 
+                  className="w-10 h-10 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary transition-colors cursor-pointer"
+                  title="Change Language"
+                 >
+                   {isTranslating ? (
+                     <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                   ) : (
+                     <Globe className="w-4 h-4" />
+                   )}
+                 </button>
+                 <div className="absolute right-0 top-10 mt-2 bg-white border border-slate-100 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-1 min-w-[140px] text-left">
+                   {supportedLanguages.map((lang) => (
+                     <button
+                       key={lang.code}
+                       onClick={() => setLanguage(lang.code)}
+                       className={`w-full text-left px-4 py-2 text-xs font-mono uppercase tracking-wider transition-colors hover:bg-slate-50 cursor-pointer ${currentLanguage === lang.code ? 'text-primary font-bold bg-primary/5' : 'text-slate-500'}`}
+                     >
+                       {lang.label}
+                     </button>
+                   ))}
+                 </div>
+               </div>
+
                <button 
                 onClick={() => setIsCommandOpen(true)}
-                className="w-10 h-10 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary transition-colors"
+                className="w-10 h-10 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary transition-colors cursor-pointer"
                >
                  <CommandIcon className="w-4 h-4" />
                </button>
                <button 
                 onClick={() => setIsNotificationsOpen(true)}
-                className="w-10 h-10 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary transition-colors relative"
+                className="w-10 h-10 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary transition-colors relative cursor-pointer"
                >
                  <Bell className="w-4 h-4" />
                  {alerts.length > 0 && (
@@ -379,12 +406,57 @@ export default function App() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 bg-background pt-24 px-6 md:hidden"
+            className="fixed inset-0 z-40 bg-background pt-24 px-6 md:hidden flex flex-col justify-between pb-8"
           >
               <div className="flex flex-col gap-6 text-xl font-heading">
-                <a href="#services" onClick={() => setIsMenuOpen(false)}>Services</a>
-                <a href="#technology" onClick={() => setIsMenuOpen(false)}>Technology</a>
-                <a href="#professional" onClick={() => setIsMenuOpen(false)}>For Professionals</a>
+                <a href="#services" onClick={() => setIsMenuOpen(false)}>{t('services_heading')}</a>
+                <a href="#technology" onClick={() => setIsMenuOpen(false)}>{t('tech_registry_title')}</a>
+                <a href="#professional" onClick={() => setIsMenuOpen(false)}>{t('pro_network_title')}</a>
+                
+                {/* Mobile action icons row */}
+                <div className="flex gap-4 items-center justify-start pt-6 mt-2 border-t border-slate-100">
+                  <button 
+                    onClick={() => {
+                      const nextLangIdx = (supportedLanguages.findIndex(l => l.code === currentLanguage) + 1) % supportedLanguages.length;
+                      setLanguage(supportedLanguages[nextLangIdx].code);
+                    }}
+                    className="w-12 h-12 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary transition-colors cursor-pointer rounded-lg bg-white"
+                    title="Change Language"
+                  >
+                    {isTranslating ? (
+                      <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-xs font-mono font-bold tracking-wider uppercase text-slate-500">
+                        <Globe className="w-4 h-4 text-slate-400" />
+                        {currentLanguage}
+                      </span>
+                    )}
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setIsCommandOpen(true);
+                    }}
+                    className="w-12 h-12 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary transition-colors cursor-pointer rounded-lg bg-white"
+                  >
+                    <CommandIcon className="w-5 h-5" />
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setIsNotificationsOpen(true);
+                    }}
+                    className="w-12 h-12 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary transition-colors relative cursor-pointer rounded-lg bg-white"
+                  >
+                    <Bell className="w-5 h-5" />
+                    {alerts.length > 0 && (
+                      <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-primary rounded-full" />
+                    )}
+                  </button>
+                </div>
+
                 <div className="flex flex-col gap-3 pt-6 border-t border-slate-100">
                   <Button 
                     onClick={() => {
@@ -393,7 +465,7 @@ export default function App() {
                     }}
                     className="w-full py-6 text-lg tracking-widest uppercase bg-primary text-white shadow-xl shadow-primary/20"
                   >
-                    Get Started
+                    {t('get_started')}
                   </Button>
                   <Button 
                     variant="outline" 
@@ -401,17 +473,22 @@ export default function App() {
                         setIsMenuOpen(false);
                         initWalletHandshake();
                     }}
-                    className="w-full py-6 text-lg tracking-widest uppercase border-slate-100 text-slate-400"
+                    className="w-full py-6 text-lg tracking-widest uppercase border-slate-100 text-slate-400 hover:bg-slate-50"
                   >
-                    Connect Wallet
+                    {t('connect_wallet')}
                   </Button>
                 </div>
+              </div>
+
+              {/* Mobile system details label */}
+              <div className="text-[10px] font-mono uppercase tracking-widest text-slate-400 text-center border-t border-slate-100 pt-4">
+                AG_SEC_V1 • {stats.uptime} • {stats.load}
               </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <main id="overview" className="container mx-auto mt-40">
+      <main id="overview" className="container mx-auto px-4 sm:px-6 lg:px-8 mt-28 md:mt-40">
         {/* Navigation Menu Rail */}
         <div className="flex gap-8 border-b border-slate-100 mb-20 pb-4 overflow-x-auto no-scrollbar">
            {['Overview', 'Topology', 'Resources', 'Security', 'Logs'].map((item, idx) => (
@@ -432,12 +509,15 @@ export default function App() {
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-slate-200 bg-slate-50 text-[10px] uppercase tracking-[0.3em] text-primary mb-8">
                 <Zap className="w-3 h-3 fill-current" />
-                Control interface v1.0.4
+                {t('control_interface_v')}
               </div>
-              <h1 className="text-6xl md:text-8xl font-heading font-bold leading-[0.85] mb-12">
-                Everything, <br />
-                <span className="text-primary italic">Everywhere,</span> <br />
-                <span className="text-slate-400">One Node.</span>
+              <h1 className="text-6xl md:text-8xl font-heading font-bold leading-[0.85] mb-12 uppercase">
+                {t('everything_everywhere').split(', ').map((text, i, arr) => (
+                  <React.Fragment key={i}>
+                    {i === 1 ? <span className="text-primary italic">{text}</span> : <span className={i === 2 ? "text-slate-400" : ""}>{text}</span>}
+                    {i < arr.length - 1 && <br />}
+                  </React.Fragment>
+                ))}
               </h1>
               <div className="flex flex-col sm:flex-row gap-4 max-w-xl">
                  <Button 
@@ -445,7 +525,7 @@ export default function App() {
                    className="h-12 px-8 uppercase tracking-widest font-bold group bg-primary text-white hover:bg-primary/90"
                    onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
                  >
-                  Initialize Session <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  {t('initialize_session')} <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 <a 
                   href="https://autgrit.io/whitepaper" 
@@ -453,7 +533,7 @@ export default function App() {
                   rel="noopener noreferrer"
                   className="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-background h-12 px-8 uppercase tracking-widest text-sm font-bold text-foreground transition-all outline-none select-none hover:bg-slate-50"
                 >
-                  View Whitepaper
+                  {t('view_whitepaper')}
                 </a>
               </div>
             </motion.div>
@@ -462,13 +542,13 @@ export default function App() {
           <div className="lg:col-span-4 grid grid-cols-1 gap-6">
              <div className="geometric-card">
                 <div className="corner-accent" />
-                <p className="terminal-label mb-2">Memory Allocation</p>
+                <p className="terminal-label mb-2">{t('memory_allocation')}</p>
                 <p className="text-4xl terminal-value">{stats.memory} <span className="text-lg text-slate-600 uppercase">GB</span></p>
-                <p className="text-[10px] text-slate-500 mt-2 font-mono uppercase">OF 64.0 AVAILABLE</p>
+                <p className="text-[10px] text-slate-500 mt-2 font-mono uppercase">{t('of_available')}</p>
              </div>
              <div className="geometric-card bg-primary/5 border-primary/20">
                 <div className="corner-accent border-primary/30" />
-                <p className="terminal-label mb-2 text-primary/70">Terminal_Session</p>
+                <p className="terminal-label mb-2 text-primary/70">{t('terminal_session')}</p>
                 <p className="text-[10px] font-mono text-slate-400 leading-tight">AUTH: LVL_0<br/>IP: 192.168.0.x<br/>SIG: RSA4096</p>
                 <div className="mt-4 flex gap-2">
                    <div className="w-1 h-1 bg-primary animate-pulse" />
@@ -483,11 +563,11 @@ export default function App() {
         <section id="services" className="mb-24">
           <div className="flex justify-between items-end border-b border-slate-100 pb-6 mb-12">
             <div>
-              <h2 className="text-3xl font-heading font-bold">CORE_SERVICES</h2>
-              <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-2">Active service cluster distribution</p>
+              <h2 className="text-3xl font-heading font-bold">{t('services_heading')}</h2>
+              <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-2">{t('services_subheading')}</p>
             </div>
-            <button className="text-[10px] border border-slate-200 px-4 py-2 hover:bg-slate-50 text-slate-500 uppercase tracking-widest transition-colors font-mono">
-              [ REF_EXPORT_DATA ]
+            <button className="text-[10px] border border-slate-200 px-4 py-2 hover:bg-slate-50 text-slate-500 uppercase tracking-widest transition-colors font-mono cursor-pointer">
+              {t('export_ref_data')}
             </button>
           </div>
 
@@ -508,15 +588,15 @@ export default function App() {
                     </div>
                     <span className="font-mono text-[9px] text-slate-400">NODE_0x{idx}</span>
                   </div>
-                  <h3 className="text-xl font-heading font-bold mb-3 text-foreground">{service.title}</h3>
-                  <p className="text-[12px] text-slate-500 leading-relaxed mb-6 uppercase tracking-wider">{service.description}</p>
+                  <h3 className="text-xl font-heading font-bold mb-3 text-foreground">{t(service.titleKey)}</h3>
+                  <p className="text-[12px] text-slate-500 leading-relaxed mb-6 uppercase tracking-wider">{t(service.descKey)}</p>
                   
                   <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-100">
-                    <span className="text-[10px] font-mono text-emerald-600 uppercase">Operational</span>
+                    <span className="text-[10px] font-mono text-emerald-600 uppercase">{t('operational_status')}</span>
                     <button 
                       onClick={() => handleServiceInvoke(service)}
                       disabled={invokingId === service.id}
-                      className={`text-[10px] font-mono uppercase tracking-widest transition-all flex items-center gap-2 ${
+                      className={`text-[10px] font-mono uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer ${
                         invokingId === service.id 
                           ? 'text-emerald-500 font-bold' 
                           : 'text-slate-400 hover:text-primary'
@@ -525,10 +605,10 @@ export default function App() {
                       {invokingId === service.id ? (
                         <>
                           <CheckCircle2 className="w-3 h-3 animate-in zoom-in duration-300" />
-                          Invoked_OK
+                          {t('invoking_ok')}
                         </>
                       ) : (
-                        'Invoke_Module'
+                        t('invoke_module')
                       )}
                     </button>
                   </div>
@@ -542,10 +622,10 @@ export default function App() {
         <section id="technology" className="mb-24">
            <div className="geometric-card bg-slate-50 p-8">
               <div className="flex justify-between items-center mb-8 border-b border-slate-200 pb-6">
-                <h3 className="text-xs font-bold text-foreground uppercase tracking-[0.25em]">System Component Registry</h3>
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-[0.25em]">{t('tech_registry_title')}</h3>
                 <div className="flex gap-4">
-                  <button className="text-[10px] border border-slate-200 px-3 py-1 hover:bg-white text-slate-500 uppercase tracking-widest font-mono transition-colors shadow-sm">Export</button>
-                  <button className="text-[10px] bg-primary text-white px-3 py-1 font-bold uppercase tracking-widest transition-colors shadow-md">Refresh</button>
+                  <button className="text-[10px] border border-slate-200 px-3 py-1 hover:bg-white text-slate-500 uppercase tracking-widest font-mono transition-colors shadow-sm cursor-pointer">{t('tech_registry_export')}</button>
+                  <button className="text-[10px] bg-primary text-white px-3 py-1 font-bold uppercase tracking-widest transition-colors shadow-md cursor-pointer">{t('tech_registry_refresh')}</button>
                 </div>
               </div>
               
@@ -553,20 +633,20 @@ export default function App() {
                 <table className="w-full text-left border-collapse font-mono text-xs">
                   <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-100">
                     <tr className="h-10">
-                      <th className="font-medium pl-2">Identifier</th>
-                      <th className="font-medium">Designation</th>
-                      <th className="font-medium">Latency</th>
-                      <th className="font-medium">Heat</th>
-                      <th className="font-medium pr-2 text-right text-emerald-600">Status</th>
+                      <th className="font-medium pl-2">{t('col_identifier')}</th>
+                      <th className="font-medium">{t('col_designation')}</th>
+                      <th className="font-medium">{t('col_latency')}</th>
+                      <th className="font-medium">{t('col_heat')}</th>
+                      <th className="font-medium pr-2 text-right text-emerald-600">{t('col_status')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-600">
                     {[
-                      { id: '0x7A_22', d: 'Core Processing Unit', l: '0.12ms', h: '42°C', s: 'Operational' },
-                      { id: '0x7A_23', d: 'Network Uplink Delta', l: '4.80ms', h: '38°C', s: 'Operational' },
-                      { id: '0x8B_01', d: 'Memory Scrub Module', l: '1.22ms', h: '56°C', s: 'High Load', warning: true },
-                      { id: '0x9C_12', d: 'Environmental Buffer', l: '0.08ms', h: '28°C', s: 'Operational' },
-                      { id: '0x2F_55', d: 'Secondary Logic Gate', l: '0.15ms', h: '44°C', s: 'Operational' },
+                      { id: '0x7A_22', d: t('row_cpu'), l: '0.12ms', h: '42°C', s: t('operational_status') },
+                      { id: '0x7A_23', d: t('row_uplink'), l: '4.80ms', h: '38°C', s: t('operational_status') },
+                      { id: '0x8B_01', d: t('row_scrub'), l: '1.22ms', h: '56°C', s: t('high_load_status'), warning: true },
+                      { id: '0x9C_12', d: t('row_buffer'), l: '0.08ms', h: '28°C', s: t('operational_status') },
+                      { id: '0x2F_55', d: t('row_gate'), l: '0.15ms', h: '44°C', s: t('operational_status') },
                     ].map((row) => (
                       <tr key={row.id} className="h-12 hover:bg-white transition-colors group">
                         <td className="pl-2 group-hover:text-primary transition-colors text-foreground font-bold">{row.id}</td>
@@ -586,8 +666,8 @@ export default function App() {
         <section id="topology" className="mb-24">
           <div className="flex justify-between items-end border-b border-slate-100 pb-6 mb-12">
             <div>
-              <h2 className="text-3xl font-heading font-bold">TOPOLOGY_RESOLVER</h2>
-              <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-2">Active network node distribution and routing matrix</p>
+              <h2 className="text-3xl font-heading font-bold">{t('topology_title')}</h2>
+              <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-2">{t('topology_subtitle')}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -597,7 +677,7 @@ export default function App() {
             <div className="space-y-6">
               <div className="geometric-card bg-white shadow-sm">
                 <div className="corner-accent border-slate-200" />
-                <h4 className="text-[10px] font-bold text-foreground uppercase tracking-widest mb-4">Node_Clusters</h4>
+                <h4 className="text-[10px] font-bold text-foreground uppercase tracking-widest mb-4">{t('node_clusters')}</h4>
                 <div className="space-y-3 font-mono text-[9px] uppercase">
                   <div className="flex justify-between">
                     <span className="text-slate-400 italic">CORE_GATEWAY</span>
@@ -615,8 +695,8 @@ export default function App() {
               </div>
               <div className="geometric-card border-primary/20 bg-primary/5">
                 <div className="corner-accent border-primary/30" />
-                <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Pulse_Detected</h4>
-                <p className="text-[9px] text-slate-500 uppercase leading-relaxed">System is performing regular heartbeats across all active sectors. Latency stable.</p>
+                <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">{t('pulse_detected')}</h4>
+                <p className="text-[9px] text-slate-500 uppercase leading-relaxed">{t('pulse_desc')}</p>
               </div>
             </div>
           </div>
@@ -632,10 +712,10 @@ export default function App() {
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 border border-primary/30 bg-primary/5 text-[10px] uppercase tracking-[0.3em] text-primary mb-8 px-4">
                 <ShieldCheck className="w-4 h-4" />
-                SECURITY_PROTOCOL_ACTIVE
+                {t('safety_protocol_active')}
               </div>
               <h2 className="text-4xl md:text-5xl font-heading font-bold mb-8 leading-tight">
-                Safety monitored by <br/><span className="text-primary italic">Autonomous Intelligence.</span>
+                {t('safety_heading')}
               </h2>
               <div className="space-y-8">
                 {FEATURES.map((feature, idx) => (
@@ -644,9 +724,9 @@ export default function App() {
                       <feature.icon className="w-6 h-6 text-slate-300 group-hover:text-primary transition-colors" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold mb-2 uppercase tracking-widest text-foreground">{feature.title}</h4>
+                      <h4 className="text-sm font-bold mb-2 uppercase tracking-widest text-foreground">{t(feature.titleKey)}</h4>
                       <p className="text-[12px] text-slate-500 uppercase tracking-wider leading-relaxed">
-                        {feature.description}
+                        {t(feature.descKey)}
                       </p>
                     </div>
                   </div>
@@ -668,15 +748,15 @@ export default function App() {
                <div className="w-16 h-16 bg-primary/10 border border-primary/20 flex items-center justify-center mb-8 rounded-2xl">
                  <Package className="w-8 h-8 text-primary" />
                </div>
-               <h2 className="text-3xl font-heading font-bold mb-4 uppercase tracking-tight">Access Pro_Resources</h2>
+               <h2 className="text-3xl font-heading font-bold mb-4 uppercase tracking-tight">{t('pro_resources_title')}</h2>
                <p className="text-slate-500 mb-8 uppercase tracking-widest text-[12px] leading-relaxed">
-                 Unlock advanced tooling, deployment guides, and network hardware required for high-tier node operation.
+                 {t('pro_resources_desc')}
                </p>
                <Button 
                 onClick={() => setActiveModule('marketplace')}
-                className="h-12 px-10 bg-primary text-white font-bold uppercase tracking-widest shadow-xl shadow-primary/20"
+                className="h-12 px-10 bg-primary text-white font-bold uppercase tracking-widest shadow-xl shadow-primary/20 cursor-pointer"
                >
-                 Launch_Marketplace
+                 {t('launch_marketplace')}
                </Button>
             </div>
           </div>
@@ -690,24 +770,26 @@ export default function App() {
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
               <div>
-                <h2 className="text-4xl md:text-5xl font-heading font-bold mb-8">Professional <br/>Network_Access</h2>
+                <h2 className="text-4xl md:text-5xl font-heading font-bold mb-8 uppercase">{t('pro_network_title').replace(/<br\/>/g, "\n")}</h2>
                 <p className="text-lg text-slate-500 mb-10 leading-relaxed uppercase tracking-wider font-medium">
-                  Integrate with the AUTGRIT ecosystem. Deploy your skills, grow through our meritocratic points system, and fulfill global demand.
+                  {t('pro_network_desc')}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
                   {['Flexible_Schedules', 'AI_Optimized_ROAS', 'Merit_Points_Sys', 'Instant_Liq_Pools'].map((item) => (
                     <div key={item} className="flex items-center gap-3 p-3 bg-white border border-slate-100 shadow-sm rounded-lg">
                       <ChevronRight className="w-3 h-3 text-primary" />
-                      <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 font-bold">{item}</span>
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 font-bold">
+                        {item === 'Flexible_Schedules' ? t('pro_schedule') : item === 'AI_Optimized_ROAS' ? t('pro_roas') : item === 'Merit_Points_Sys' ? t('pro_merit') : item === 'Instant_Liq_Pools' ? t('pro_liq') : item}
+                      </span>
                     </div>
                   ))}
                 </div>
                 <Button 
                   size="lg" 
                   onClick={() => setIsCommandOpen(true)}
-                  className="h-12 px-10 bg-primary text-white hover:bg-primary/90 uppercase tracking-widest font-bold shadow-xl shadow-primary/20"
+                  className="h-12 px-10 bg-primary text-white hover:bg-primary/90 uppercase tracking-widest font-bold shadow-xl shadow-primary/20 cursor-pointer"
                 >
-                  Request_Access_Invite
+                  {t('req_access')}
                 </Button>
               </div>
               
@@ -730,10 +812,10 @@ export default function App() {
         <section className="mb-24 grid grid-cols-1 lg:grid-cols-3 gap-8">
            <div className="lg:col-span-2 geometric-card bg-white border-slate-100 shadow-xl">
               <div className="corner-accent" />
-              <h2 className="text-2xl font-bold mb-6">CURRENCY_RESOLVER</h2>
+              <h2 className="text-2xl font-bold mb-6">{t('currency_resolver')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                  <div>
-                    <p className="terminal-label mb-4 underline decoration-slate-100 underline-offset-8 font-bold">Standard_Fiat</p>
+                    <p className="terminal-label mb-4 underline decoration-slate-100 underline-offset-8 font-bold">{t('fiat_networks')}</p>
                     <div className="grid grid-cols-1 gap-2 font-mono text-[11px]">
                        {['USD_TERMINAL', 'EUR_NETWORK', 'GBP_RELAY', 'JPY_TRANSIT'].map(f => (
                          <div key={f} className="flex justify-between p-3 bg-slate-50 border border-slate-50 rounded-lg group hover:border-primary/20 transition-all">
@@ -744,7 +826,7 @@ export default function App() {
                     </div>
                  </div>
                  <div>
-                    <p className="terminal-label mb-4 underline decoration-slate-100 underline-offset-8 font-bold">Crypto_Assets</p>
+                    <p className="terminal-label mb-4 underline decoration-slate-100 underline-offset-8 font-bold">{t('crypto_networks')}</p>
                     <div className="grid grid-cols-1 gap-2 font-mono text-[11px]">
                        {['BTC_MAINNET', 'ETH_CONSENSUS', 'SOL_UPSTREAM', 'USDT_VAULT'].map(c => (
                          <div key={c} className="flex justify-between p-3 bg-slate-50 border border-slate-50 rounded-lg group hover:border-primary/20 transition-all">
@@ -765,40 +847,40 @@ export default function App() {
                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full" />
                  )}
               </div>
-              <h3 className="text-lg font-bold mb-4 text-foreground">{isWalletConnected ? 'VAULT_SYNCHRONIZED' : 'WALLET_CONNECT'}</h3>
+              <h3 className="text-lg font-bold mb-4 text-foreground">{isWalletConnected ? t('wallet_connected') : t('connect_wallet')}</h3>
               {isWalletConnected ? (
                 <div className="space-y-4 mb-8">
-                   <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Available Balance</p>
+                   <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">{t('avail_balance')}</p>
                    <p className="text-3xl font-heading font-bold text-primary">{walletBalance.eth} <span className="text-sm font-mono opacity-50">ETH</span></p>
                    <p className="text-[8px] font-mono text-slate-400 font-bold">ADDR: 0x71...F23A</p>
                 </div>
               ) : (
-                <p className="text-[10px] uppercase text-slate-400 tracking-widest leading-loose mb-8 font-bold">Establish secure handshake with decentralized identity providers.</p>
+                <p className="text-[10px] uppercase text-slate-400 tracking-widest leading-loose mb-8 font-bold">{t('handshake_desc')}</p>
               )}
               <Button 
                 onClick={initWalletHandshake}
                 disabled={isWalletConnected}
-                className="w-full bg-primary text-white hover:bg-primary/90 uppercase tracking-widest font-bold h-12 shadow-xl shadow-primary/20"
+                className="w-full bg-primary text-white hover:bg-primary/90 uppercase tracking-widest font-bold h-12 shadow-xl shadow-primary/20 cursor-pointer"
               >
-                {isWalletConnected ? 'NODE_ACTIVE' : 'Init_Handshake'}
+                {isWalletConnected ? t('operational_status') : t('init_handshake')}
               </Button>
            </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="container mx-auto mt-20 pt-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center text-[9px] font-mono uppercase tracking-[0.2em] text-slate-400 gap-8 mb-12">
-        <div className="flex flex-wrap justify-center gap-12">
+      <footer className="container mx-auto px-4 sm:px-6 lg:px-8 mt-20 pt-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center text-[9px] font-mono uppercase tracking-[0.2em] text-slate-400 gap-8 mb-12">
+         <div className="flex flex-wrap justify-center gap-12">
           <div className="flex flex-col gap-1">
-             <span className="text-slate-300 font-bold tracking-[0.3em]">Protocol</span>
+              <span className="text-slate-300 font-bold tracking-[0.3em]">{t('footer_protocol')}</span>
              <span>AutGrit-Secure-v1</span>
           </div>
           <div className="flex flex-col gap-1">
-             <span className="text-slate-300 font-bold tracking-[0.3em]">Auth_Matrix</span>
+              <span className="text-slate-300 font-bold tracking-[0.3em]">{t('footer_matrix')}</span>
              <span>Admin-Level-0</span>
           </div>
           <div className="flex flex-col gap-1">
-             <span className="text-slate-300 font-bold tracking-[0.3em]">Encryption</span>
+              <span className="text-slate-300 font-bold tracking-[0.3em]">{t('footer_encryption')}</span>
              <span>SHA-512/RSA-4096</span>
           </div>
           <div className="flex gap-4">
@@ -808,7 +890,7 @@ export default function App() {
           </div>
         </div>
         <div className="text-right flex flex-col items-center md:items-end gap-2">
-           <p>© 2026 AutGrit Systems - All Rights Reserved</p>
+           <p>{t('footer_rights')}</p>
            <p className="text-primary opacity-50 font-bold">Local_Crd: SYST_0x2900_V</p>
         </div>
       </footer>

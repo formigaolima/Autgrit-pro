@@ -33,12 +33,27 @@ const data: { nodes: Node[]; links: Link[] } = {
 
 export const TopologyMap: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = React.useState({ width: 600, height: 400 });
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const width = containerRef.current.clientWidth;
-    const height = 400;
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (!entries || entries.length === 0) return;
+      const { width } = entries[0].contentRect;
+      if (width > 0) {
+        setDimensions({ width, height: 400 });
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const { width, height } = dimensions;
 
     // Clear previous SVG
     d3.select(containerRef.current).selectAll('*').remove();
@@ -52,8 +67,8 @@ export const TopologyMap: React.FC = () => {
       .attr('class', 'bg-slate-50/50');
 
     const simulation = d3.forceSimulation<Node>(data.nodes)
-      .force('link', d3.forceLink<Node, Link>(data.links).id(d => d.id).distance(100))
-      .force('charge', d3.forceManyBody().strength(-300))
+      .force('link', d3.forceLink<Node, Link>(data.links).id(d => d.id).distance(Math.min(100, width / 6)))
+      .force('charge', d3.forceManyBody().strength(-250))
       .force('center', d3.forceCenter(width / 2, height / 2));
 
     const link = svg.append('g')
@@ -124,7 +139,11 @@ export const TopologyMap: React.FC = () => {
         .on('drag', dragged)
         .on('end', dragended);
     }
-  }, []);
+
+    return () => {
+      simulation.stop();
+    };
+  }, [dimensions]);
 
   return (
     <div className="w-full h-[400px] bg-white border border-slate-100 relative overflow-hidden rounded-lg shadow-sm">
