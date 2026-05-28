@@ -619,8 +619,8 @@ export const RideHailingMap: React.FC<{ onClose: () => void }> = ({ onClose }) =
           )}
 
           {/* Map Overlay Controls */}
-          <div className="absolute bottom-6 left-6 z-[1000] flex flex-col gap-3">
-             <div className="bg-white/90 backdrop-blur-md border border-slate-100 p-4 min-w-[200px] shadow-2xl rounded-xl">
+          <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:bottom-6 sm:left-6 z-[1000] flex flex-col gap-3">
+             <div className="bg-white/90 backdrop-blur-md border border-slate-100 p-4 w-full sm:min-w-[200px] shadow-2xl rounded-xl">
                 <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-3 font-bold">Service Statistics</p>
                 <div className="space-y-2">
                    {bookedCar ? (

@@ -82,17 +82,17 @@ export const PaymentModule: React.FC<{ onClose: () => void; balance: { eth: stri
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[4000] bg-slate-200/40 backdrop-blur-sm flex flex-col items-center justify-center p-6 md:p-12"
+      className="fixed inset-0 z-[4000] bg-slate-200/40 backdrop-blur-sm flex flex-col items-center justify-center p-0 sm:p-6 md:p-12"
     >
       <motion.div 
         initial={{ scale: 0.95, y: 20 }}
         animate={{ scale: 1, y: 0 }}
-        className="geometric-card w-full max-w-4xl bg-white border-primary/20 flex flex-col h-full max-h-[800px] overflow-hidden shadow-2xl"
+        className="geometric-card w-full max-w-4xl bg-white border-primary/20 flex flex-col h-full sm:h-auto sm:max-h-[800px] overflow-hidden shadow-2xl rounded-none sm:rounded-2xl"
       >
         <div className="corner-accent" />
         
         {/* Header */}
-        <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+        <div className="p-4 sm:p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-heading font-bold text-foreground uppercase tracking-[0.3em] flex items-center gap-4">
               <CreditCard className="w-5 h-5 text-primary" />
@@ -105,9 +105,9 @@ export const PaymentModule: React.FC<{ onClose: () => void; balance: { eth: stri
           </button>
         </div>
 
-        <div className="flex-1 flex overflow-hidden bg-white">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-white">
           {/* Internal Navigation */}
-          <div className="w-48 border-r border-slate-100 p-6 flex flex-col gap-2 bg-slate-50/30">
+          <div className="w-full md:w-48 border-b md:border-b-0 md:border-r border-slate-100 p-4 md:p-6 flex flex-row md:flex-col gap-2 bg-slate-50/30 overflow-x-auto no-scrollbar shrink-0 animate-in fade-in duration-300">
             {[
               { id: 'overview', icon: Zap, label: 'Overview' },
               { id: 'send', icon: Send, label: 'Send' },
@@ -117,7 +117,7 @@ export const PaymentModule: React.FC<{ onClose: () => void; balance: { eth: stri
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-3 p-3 text-[10px] uppercase font-mono tracking-widest transition-all rounded-lg font-bold ${
+                className={`flex items-center gap-3 px-4 py-2.5 md:p-3 text-[10px] uppercase font-mono tracking-widest transition-all rounded-lg font-bold shrink-0 ${
                   activeTab === tab.id ? 'text-primary bg-primary/5 shadow-sm border border-primary/10' : 'text-slate-400 hover:text-primary'
                 }`}
               >
@@ -128,7 +128,7 @@ export const PaymentModule: React.FC<{ onClose: () => void; balance: { eth: stri
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 p-10 overflow-y-auto no-scrollbar bg-white">
+          <div className="flex-1 p-4 sm:p-10 overflow-y-auto no-scrollbar bg-white">
             <AnimatePresence mode="wait">
               {activeTab === 'overview' && (
                 <motion.div

@@ -74,17 +74,17 @@ export const MarketplaceModule: React.FC<{ onClose: () => void }> = ({ onClose }
 
       <div className="flex-1 overflow-hidden flex flex-col md:flex-row bg-white">
         {/* Sidebar Filters */}
-        <div className="w-full md:w-64 border-r border-slate-100 p-8 space-y-12 bg-slate-50/30">
+        <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-100 p-4 md:p-8 space-y-4 md:space-y-12 bg-slate-50/30 shrink-0">
           <div>
-            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 md:mb-6 flex items-center gap-2">
               <Filter className="w-3 h-3 text-primary" /> Filters
             </h4>
-            <div className="space-y-2">
+            <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible no-scrollbar pb-2 md:pb-0">
               {['All', 'Hardware', 'Software', 'Security', 'Wearable'].map(cat => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`w-full text-left p-3 text-[10px] uppercase font-mono tracking-widest border transition-all rounded-lg font-bold ${
+                  className={`shrink-0 md:w-full text-left px-4 py-2.5 md:p-3 text-[10px] uppercase font-mono tracking-widest border transition-all rounded-lg font-bold ${
                     activeCategory === cat ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'bg-white border-slate-100 text-slate-400 hover:text-primary hover:border-primary/30'
                   }`}
                 >
@@ -94,7 +94,7 @@ export const MarketplaceModule: React.FC<{ onClose: () => void }> = ({ onClose }
             </div>
           </div>
 
-          <div className="geometric-card bg-primary/5 border-primary/20 p-6 shadow-sm">
+          <div className="hidden md:block geometric-card bg-primary/5 border-primary/20 p-6 shadow-sm">
             <Shield className="w-8 h-8 text-primary/30 mb-4" />
             <p className="text-[10px] font-bold text-foreground mb-2 uppercase tracking-widest">AG_SEC_VERIFIED</p>
             <p className="text-[8px] text-slate-500 leading-relaxed uppercase tracking-wider font-bold">All assets in this registry have undergone rigorous automated security validation.</p>

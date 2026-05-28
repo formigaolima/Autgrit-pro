@@ -43,7 +43,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ alerts, 
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-[400px] z-[5600] bg-white border-l border-slate-100 shadow-2xl flex flex-col"
+            className="fixed top-0 right-0 h-full w-full sm:w-[400px] z-[5600] bg-white border-l border-slate-100 shadow-2xl flex flex-col"
           >
             {/* Header */}
             <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">

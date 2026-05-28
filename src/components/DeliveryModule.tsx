@@ -99,8 +99,8 @@ export const DeliveryModule: React.FC<{ onClose: () => void }> = ({ onClose }) =
         </MapContainer>
 
         {/* Global Stats Overlay */}
-        <div className="absolute bottom-8 left-8 z-[1000] space-y-4 pointer-events-none">
-          <div className="geometric-card w-64 bg-white/90 backdrop-blur-md p-6 shadow-xl border-primary/20">
+        <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:bottom-8 sm:left-8 z-[1000] space-y-4 pointer-events-none">
+          <div className="geometric-card w-full sm:w-64 bg-white/90 backdrop-blur-md p-6 shadow-xl border-primary/20">
             <h4 className="text-[10px] font-bold text-foreground uppercase tracking-widest mb-4">Grid_Efficiency</h4>
             <div className="space-y-2">
                <div className="flex justify-between items-center text-[10px] font-mono font-bold">
