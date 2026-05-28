@@ -16,19 +16,40 @@ export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Initializing Socket.io connection
-    socketRef.current = io();
+    // Initializing Socket.io connection with ONLY 'websocket' transport to
+    // completely prevent continuous 404 polling requests on platforms like Vercel.
+    const socket = io({
+      transports: ['websocket'],
+      reconnectionAttempts: 1,
+      timeout: 3000,
+      autoConnect: true,
+    });
+    socketRef.current = socket;
 
-    socketRef.current.on('message', (data: any) => {
+    socket.on('connect', () => {
+      setIsSocketConnected(true);
+    });
+
+    socket.on('disconnect', () => {
+      setIsSocketConnected(false);
+    });
+
+    socket.on('connect_error', () => {
+      setIsSocketConnected(false);
+    });
+
+    socket.on('message', (data: any) => {
       setMessages((prev) => [
         ...prev,
         {
           ...data,
-          isMe: data.socketId === socketRef.current?.id,
+          isMe: data.socketId === socket.id,
         },
       ]);
     });
@@ -47,7 +68,7 @@ export const ChatWidget: React.FC = () => {
     }, 1000);
 
     return () => {
-      socketRef.current?.disconnect();
+      socket.disconnect();
     };
   }, []);
 
@@ -55,20 +76,72 @@ export const ChatWidget: React.FC = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isOpen]);
+  }, [messages, isOpen, isTyping]);
 
   const handleSendMessage = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!inputValue.trim() || !socketRef.current) return;
+    if (!inputValue.trim()) return;
 
-    const messageData = {
-      sender: 'OPERATOR_PRO',
-      text: inputValue,
-      socketId: socketRef.current.id,
-    };
+    if (isSocketConnected && socketRef.current) {
+      const messageData = {
+        sender: 'OPERATOR_PRO',
+        text: inputValue,
+        socketId: socketRef.current.id,
+      };
+      socketRef.current.emit('message', messageData);
+      setInputValue('');
+    } else {
+      // Offline/Static fallback simulation
+      const textToSend = inputValue;
+      setInputValue('');
 
-    socketRef.current.emit('message', messageData);
-    setInputValue('');
+      // 1. Immediately append user message
+      const userMsg: Message = {
+        id: 'local-' + Date.now(),
+        sender: 'OPERATOR_PRO',
+        text: textToSend,
+        timestamp: new Date().toISOString(),
+        isMe: true,
+      };
+      setMessages((prev) => [...prev, userMsg]);
+
+      // 2. Simulate AI thinking/typing animation
+      setIsTyping(true);
+
+      setTimeout(() => {
+        setIsTyping(false);
+
+        const lowerText = textToSend.toLowerCase();
+        let aiText = "AUTGRIT_AI: Request received. Running local telemetry compilation... Local system cache reports full functional parameters.";
+
+        if (lowerText.includes('hardware') || lowerText.includes('server') || lowerText.includes('status')) {
+          aiText = "SYSTEM_STATUS: Central cluster is nominal. Memory mapping active. Access points are secure under SHA-512/RSA-4096 protocols.";
+        } else if (lowerText.includes('money') || lowerText.includes('wallet') || lowerText.includes('eth') || lowerText.includes('balance')) {
+          aiText = "VAULT_SYNCHRONIZER: Crypto ledger status is active. Real-time Ethereum consensus is synchronized at 0x71...F23A. System fee is set to standard 0.0012 ETH.";
+        } else if (lowerText.includes('ride') || lowerText.includes('taxi') || lowerText.includes('sober') || lowerText.includes('driver')) {
+          aiText = "GEOLOCATION_SYSTEM: GPS routing and topology map loaded. Nearest autonomous pilot/vehicle unit is within response proximity (estimated 4.2 minutes).";
+        } else if (lowerText.includes('help') || lowerText.includes('menu')) {
+          aiText = "GRID_HELP: Operational controls are bound to: #services (Core Node), #professional (Pro Network), #overview (Resource Logs). To trigger actions, access the interactive components in the dashboard.";
+        } else {
+          const defaults = [
+            "SYSTEM_AI: Request mapped. Real-time server sockets are offline (Local-Loopback Active). System operations are unaffected and fully secured.",
+            "AUTGRIT_AI: Command understood. Processing local data files... Everything is running stable locally.",
+            "GRID_COMMS: Checking decentralized blockchain registers... Local copy of ledger validated.",
+            "OPERATIONAL_LOG: Node access is active with Level-0 credentials. How else can I assist with local modules?"
+          ];
+          aiText = defaults[Math.floor(Math.random() * defaults.length)];
+        }
+
+        const aiMsg: Message = {
+          id: 'ai-local-' + Date.now(),
+          sender: 'SYSTEM_AI',
+          text: aiText,
+          timestamp: new Date().toISOString(),
+          isMe: false,
+        };
+        setMessages((prev) => [...prev, aiMsg]);
+      }, 1200);
+    }
   };
 
   return (
@@ -133,6 +206,21 @@ export const ChatWidget: React.FC = () => {
                   </div>
                 </div>
               ))}
+              {isTyping && (
+                <div className="flex flex-col items-start animate-pulse">
+                  <div className="flex items-center gap-1.5 mb-1 px-1">
+                    <span className="text-[8px] uppercase tracking-tighter font-bold text-primary">
+                      SYSTEM_AI
+                    </span>
+                    <span className="text-[7px] text-slate-300 font-mono">
+                      NOW
+                    </span>
+                  </div>
+                  <div className="max-w-[85%] p-3 text-[11px] leading-relaxed shadow-sm bg-slate-50 border border-slate-100 text-primary uppercase font-bold tracking-wider">
+                    [TRANSMITTING...]
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Input Area */}
