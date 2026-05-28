@@ -22,37 +22,48 @@ export const ChatWidget: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Initializing Socket.io connection with ONLY 'websocket' transport to
-    // completely prevent continuous 404 polling requests on platforms like Vercel.
-    const socket = io({
-      transports: ['websocket'],
-      reconnectionAttempts: 1,
-      timeout: 3000,
-      autoConnect: true,
-    });
-    socketRef.current = socket;
+    const isVercel = typeof window !== 'undefined' && (
+      window.location.hostname.includes('vercel') || 
+      window.location.hostname.includes('github.io')
+    );
 
-    socket.on('connect', () => {
-      setIsSocketConnected(true);
-    });
+    let socket: Socket | null = null;
 
-    socket.on('disconnect', () => {
-      setIsSocketConnected(false);
-    });
+    if (!isVercel) {
+      // Initializing Socket.io connection with ONLY 'websocket' transport to
+      // completely prevent continuous 404 polling requests on platforms like Vercel.
+      socket = io({
+        transports: ['websocket'],
+        reconnectionAttempts: 1,
+        timeout: 3000,
+        autoConnect: true,
+      });
+      socketRef.current = socket;
 
-    socket.on('connect_error', () => {
-      setIsSocketConnected(false);
-    });
+      socket.on('connect', () => {
+        setIsSocketConnected(true);
+      });
 
-    socket.on('message', (data: any) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...data,
-          isMe: data.socketId === socket.id,
-        },
-      ]);
-    });
+      socket.on('disconnect', () => {
+        setIsSocketConnected(false);
+      });
+
+      socket.on('connect_error', () => {
+        setIsSocketConnected(false);
+      });
+
+      socket.on('message', (data: any) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            ...data,
+            isMe: data.socketId === socket?.id,
+          },
+        ]);
+      });
+    } else {
+      console.log('Static host environment detected (Vercel). Commencing stable local simulated telemetry.');
+    }
 
     // Welcome message
     setTimeout(() => {
@@ -68,7 +79,9 @@ export const ChatWidget: React.FC = () => {
     }, 1000);
 
     return () => {
-      socket.disconnect();
+      if (socket) {
+        socket.disconnect();
+      }
     };
   }, []);
 
