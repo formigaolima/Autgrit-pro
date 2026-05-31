@@ -1,0 +1,20 @@
+{
+  "wallet": {
+    "eth": "1.8492",
+    "isWalletConnected": true
+  },
+  "rideBooking": null,
+  "terminalLogs": [
+    {
+      "id": "init-log-1",
+      "type": "SYS",
+      "message": "AG_DB_SYSTEM: Persistent database initiated. Level-0 registry active.",
+      "timestamp": "12:00:00"
+    }
+  ],
+  "systemStats": {
+    "load": "04.22%",
+    "uptime": "412:05:22",
+    "memory": "12.4"
+  }
+}

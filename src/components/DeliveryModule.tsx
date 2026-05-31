@@ -26,23 +26,66 @@ interface LogisticsUnit {
   eta: string;
 }
 
+// Component to recenter map
+function ChangeView({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, 14);
+  }, [center, map]);
+  return null;
+}
+
 export const DeliveryModule: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const [units, setUnits] = useState<LogisticsUnit[]>([
-    { id: 'TRK-01', position: [-23.5505, -46.6333], rotation: 90, label: 'UNIT_OMEGA_DELIVERY', load: 'HIGH_PRIORITY_CARGO', eta: '12m' },
-    { id: 'TRK-02', position: [-23.5555, -46.6383], rotation: 180, label: 'PARCEL_NODE_B', load: 'PHARMACEUTICALS', eta: '4m' },
-    { id: 'TRK-03', position: [-23.5455, -46.6283], rotation: 45, label: 'HEAVY_RELAY_04', load: 'URBAN_SUPPLY', eta: '22m' },
-  ]);
+  const [center, setCenter] = useState<[number, number]>([-23.5505, -46.6333]); // Default São Paulo
+  const [loading, setLoading] = useState(true);
+  const [units, setUnits] = useState<LogisticsUnit[]>([]);
 
   useEffect(() => {
+    const handleGeo = (position: any) => {
+      const { latitude, longitude } = position.coords;
+      const userPos: [number, number] = [latitude, longitude];
+      setCenter(userPos);
+      setUnits([
+        { id: 'TRK-01', position: [latitude + 0.002, longitude + 0.002], rotation: 90, label: 'UNIT_OMEGA_DELIVERY', load: 'HIGH_PRIORITY_CARGO', eta: '12m' },
+        { id: 'TRK-02', position: [latitude - 0.003, longitude + 0.005], rotation: 180, label: 'PARCEL_NODE_B', load: 'PHARMACEUTICALS', eta: '4m' },
+        { id: 'TRK-03', position: [latitude + 0.004, longitude - 0.003], rotation: 45, label: 'HEAVY_RELAY_04', load: 'URBAN_SUPPLY', eta: '22m' },
+      ]);
+      setLoading(false);
+    };
+
+    const handleErr = () => {
+      const defaultCenter: [number, number] = [-23.5505, -46.6333];
+      setCenter(defaultCenter);
+      setUnits([
+        { id: 'TRK-01', position: [defaultCenter[0] + 0.002, defaultCenter[1] + 0.002], rotation: 90, label: 'UNIT_OMEGA_DELIVERY', load: 'HIGH_PRIORITY_CARGO', eta: '12m' },
+        { id: 'TRK-02', position: [defaultCenter[0] - 0.003, defaultCenter[1] + 0.005], rotation: 180, label: 'PARCEL_NODE_B', load: 'PHARMACEUTICALS', eta: '4m' },
+        { id: 'TRK-03', position: [defaultCenter[0] + 0.004, defaultCenter[1] - 0.003], rotation: 45, label: 'HEAVY_RELAY_04', load: 'URBAN_SUPPLY', eta: '22m' },
+      ]);
+      setLoading(false);
+    };
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(handleGeo, handleErr, {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      });
+    } else {
+      handleErr();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (units.length === 0) return;
     const interval = setInterval(() => {
       setUnits(prev => prev.map(u => ({
         ...u,
-        position: [u.position[0] + (Math.random() - 0.5) * 0.001, u.position[1] + (Math.random() - 0.5) * 0.001],
+        position: [u.position[0] + (Math.random() - 0.5) * 0.0005, u.position[1] + (Math.random() - 0.5) * 0.0005],
         rotation: u.rotation + (Math.random() - 0.5) * 10
       })));
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [units.length]);
 
   return (
     <motion.div 
@@ -66,7 +109,14 @@ export const DeliveryModule: React.FC<{ onClose: () => void }> = ({ onClose }) =
       </div>
 
       <div className="flex-1 relative bg-white">
-        <MapContainer center={[-23.5505, -46.6333]} zoom={14} className="h-full w-full" zoomControl={false} attributionControl={false}>
+        {loading ? (
+          <div className="absolute inset-0 z-[2000] bg-slate-50/80 backdrop-blur-sm flex flex-col items-center justify-center">
+            <div className="w-10 h-10 border-2 border-primary border-t-transparent animate-spin rounded-full mb-3" />
+            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-bold">Querying Logistics Node GPS...</p>
+          </div>
+        ) : null}
+        <MapContainer center={center} zoom={14} className="h-full w-full" zoomControl={false} attributionControl={false}>
+          <ChangeView center={center} />
           <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
           {units.map(unit => (
             <Marker key={unit.id} position={unit.position} icon={getTruckIcon(unit.rotation)}>

@@ -5,6 +5,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import fs from "fs";
 
 dotenv.config();
 
@@ -94,6 +95,46 @@ async function startServer() {
   // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", time: new Date().toISOString() });
+  });
+
+  const getDatabasePath = () => path.join(process.cwd(), "database.json");
+
+  const readDatabase = () => {
+    const dbPath = getDatabasePath();
+    try {
+      if (fs.existsSync(dbPath)) {
+        return JSON.parse(fs.readFileSync(dbPath, "utf-8"));
+      }
+    } catch (e) {
+      console.error("Failed to read database:", e);
+    }
+    return {
+      wallet: { eth: "1.8492", isWalletConnected: true },
+      rideBooking: null,
+      terminalLogs: [],
+      systemStats: { load: "04.22%", uptime: "412:05:22", memory: "12.4" }
+    };
+  };
+
+  const writeDatabase = (data: any) => {
+    try {
+      fs.writeFileSync(getDatabasePath(), JSON.stringify(data, null, 2), "utf-8");
+      return true;
+    } catch (e) {
+      console.error("Failed to write database:", e);
+      return false;
+    }
+  };
+
+  app.get("/api/database", (req, res) => {
+    res.json(readDatabase());
+  });
+
+  app.post("/api/database/update", (req, res) => {
+    const currentDb = readDatabase();
+    const updatedDb = { ...currentDb, ...req.body };
+    writeDatabase(updatedDb);
+    res.json(updatedDb);
   });
 
   app.post("/api/translate", async (req, res) => {

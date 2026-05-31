@@ -135,6 +135,13 @@ export default function App() {
   const [pendingService, setPendingService] = useState<any | null>(null);
   const [paymentStep, setPaymentStep] = useState<'idle' | 'authorizing' | 'processing' | 'success'>('idle');
   const [invokingId, setInvokingId] = useState<string | null>(null);
+
+  // Custom GPS & Radar scanning state variables
+  const [userCoords, setUserCoords] = useState<{lat: number, lng: number} | null>(null);
+  const [nearUnits, setNearUnits] = useState<any[]>([]);
+  const [activeRadarService, setActiveRadarService] = useState<any | null>(null);
+  const [showRadarAlert, setShowRadarAlert] = useState<boolean>(false);
+  const [isSyncingGps, setIsSyncingGps] = useState<boolean>(false);
   
   // Dynamic stats
   const [stats, setStats] = useState({
@@ -142,6 +149,114 @@ export default function App() {
     uptime: '412:05:22',
     memory: '12.4'
   });
+
+  // Generate 4-5 near units/personas tailored SPECIFICALLY to that service!
+  const generateNearUnitsForService = (service: any, lat: number, lng: number) => {
+    const prefix = service.id.toUpperCase();
+    const mockNames = {
+      ride: ['Corsa Privata #0x12', 'Tesla S - Casey L.', 'Lucid Air - Robin K.', 'Rivian R1S - Jordan P.'],
+      delivery: ['Mini Drone Delivery #A4', 'Cargo E-Bike Delta', 'Unit 0x99 Carrier', 'Autonomous Trike Beta'],
+      sober: ['SafeReturn Pilot Dan', 'SecureDrive Operator Maria', 'Driver Carlos', 'Tactical Companion Ana'],
+      physical: ['Electric Guru Felix', 'Sanitation Unit Alpha', 'Mechanical Relay Hector', 'Locksmith Node 09'],
+      digital: ['Smart-Contract Oracle', 'Varanelli FullStack Node', 'AG-Neural Modeler Kyra', 'CyberSec Penetrator'],
+      marketplace: ['Hardware Sourcing Hub 02', 'Secure Wearable Vault', 'Hardware Enclave Alpha', 'Telemetry Merchant'],
+      payment: ['P2P Collateral Rebalancer', 'Uniswap Gateway Delta', 'USDT Instant Liquidity', 'Tactical Swap Engine'],
+      health: ['Med-Link Drone Omega', 'Mobile Trauma Uplink 3', 'Pharma Courier Relay-X', 'Bio-Telemetry Monitor'],
+      education: ['Knowledge Matrix Relay', 'Ed-Chain Node #45', 'Skill Certifier Oracle', 'Algonquin Mentor-Node']
+    };
+
+    const names = mockNames[service.id as keyof typeof mockNames] || [
+      `${prefix}_UNIT_ALPHA`, `${prefix}_UNIT_BETA`, `${prefix}_UNIT_GAMMA`, `${prefix}_UNIT_DELTA`
+    ];
+
+    return names.map((name, i) => {
+      // Small offset to simulate units within close range
+      const offsetLat = (Math.random() - 0.5) * 0.006;
+      const offsetLng = (Math.random() - 0.5) * 0.006;
+      const distanceKm = Math.sqrt(offsetLat * offsetLat + offsetLng * offsetLng) * 111.32; // Approx distance in km
+      return {
+        id: `${service.id}-${i}`,
+        name,
+        lat: lat + offsetLat,
+        lng: lng + offsetLng,
+        distance: distanceKm.toFixed(3),
+        status: 'OPERATIONAL',
+        reliability: (95 + Math.random() * 5).toFixed(1) + '%'
+      };
+    });
+  };
+
+  const triggerGpsSync = (service: any) => {
+    setIsSyncingGps(true);
+    setActiveRadarService(service);
+    setShowRadarAlert(true);
+    addAlert('operation', 'GPS_AUTO_ACQUIRE', 'Securing automatic telemetry handshake & perimeter scan...');
+
+    const handleSuccess = async (position: any) => {
+      const { latitude, longitude } = position.coords;
+      const coords = { lat: latitude, lng: longitude };
+      setUserCoords(coords);
+      
+      const units = generateNearUnitsForService(service, latitude, longitude);
+      setNearUnits(units);
+      setIsSyncingGps(false);
+      
+      const serviceTitle = service.titleKey ? t(service.titleKey) : service.title;
+      addAlert('success', 'GPS_ALIGNED', `Perimeter scan finalized: ${units.length} units spotted near Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}.`);
+      
+      try {
+        await fetch('/api/database/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gpsLocation: coords,
+            lastServiceUnits: units,
+            lastActiveServiceId: service.id
+          })
+        });
+      } catch (err) {
+        console.error("Failed to commit GPS alignment to DB:", err);
+      }
+    };
+
+    const handleError = async () => {
+      // Default / fallback coordinates (São Paulo center) to assure perfect operational status
+      const latitude = -23.5505;
+      const longitude = -46.6333;
+      const coords = { lat: latitude, lng: longitude };
+      setUserCoords(coords);
+      
+      const units = generateNearUnitsForService(service, latitude, longitude);
+      setNearUnits(units);
+      setIsSyncingGps(false);
+      
+      addAlert('security', 'GEO_LOCK_SIMULATED', `Manual geographic lookup activated. Dynamic boundary calibrated.`);
+      
+      try {
+        await fetch('/api/database/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gpsLocation: coords,
+            lastServiceUnits: units,
+            lastActiveServiceId: service.id
+          })
+        });
+      } catch (err) {
+        console.error("Failed to commit fallback GPS mapping:", err);
+      }
+    };
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(handleSuccess, handleError, {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      });
+    } else {
+      handleError();
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -161,9 +276,43 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const initWalletHandshake = () => {
+  useEffect(() => {
+    const loadDb = async () => {
+      try {
+        const res = await fetch('/api/database');
+        if (res.ok) {
+          const dbData = await res.json();
+          if (dbData.wallet) {
+            setWalletBalance({ eth: dbData.wallet.eth });
+            setIsWalletConnected(dbData.wallet.isWalletConnected);
+          }
+          if (dbData.systemStats) {
+            setStats(prev => ({ ...prev, ...dbData.systemStats }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load initial database state:", err);
+      }
+    };
+    loadDb();
+  }, []);
+
+  const initWalletHandshake = async () => {
+    const newEth = (1.5 + Math.random()).toFixed(4);
     setIsWalletConnected(true);
-    setWalletBalance({ eth: (1.5 + Math.random()).toFixed(4) }); // Give some initial balance for simulation
+    setWalletBalance({ eth: newEth });
+
+    try {
+      await fetch('/api/database/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: { eth: newEth, isWalletConnected: true }
+        })
+      });
+    } catch (err) {
+      console.error("Failed to commit wallet to database:", err);
+    }
   };
 
   useEffect(() => {
@@ -192,10 +341,14 @@ export default function App() {
     setInvokingId(service.id);
     setTimeout(() => setInvokingId(null), 2000);
 
+    // Auto-trigger GPS sync and adaptive nearby units radar scan
+    triggerGpsSync(service);
+
     if (!isWalletConnected) {
       if (['ride', 'delivery', 'sober', 'marketplace', 'payment'].includes(service.id)) {
         setActiveModule(service.id);
-        addAlert('operation', 'MODULE_INVOKED', `Establishing secure link to ${service.title}`);
+        const resolvedTitle = service.titleKey ? t(service.titleKey) : service.title;
+        addAlert('operation', 'MODULE_INVOKED', `Establishing secure link to ${resolvedTitle}`);
       }
       return;
     }
@@ -205,13 +358,27 @@ export default function App() {
 
   const executeTransaction = () => {
     setPaymentStep('processing');
-    setTimeout(() => {
+    setTimeout(async () => {
       const fee = 0.0012;
       const current = parseFloat(walletBalance.eth);
       if (current >= fee) {
-        setWalletBalance({ eth: (current - fee).toFixed(4) });
+        const nextEth = (current - fee).toFixed(4);
+        setWalletBalance({ eth: nextEth });
         setPaymentStep('success');
         addAlert('success', 'TRANSACTION_MINED', `Fee of 0.0012 ETH confirmed. Access granted.`);
+
+        try {
+          await fetch('/api/database/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              wallet: { eth: nextEth, isWalletConnected: true }
+            })
+          });
+        } catch (err) {
+          console.error("Failed to commit wallet to database on tx:", err);
+        }
+
         setTimeout(() => {
           setPaymentStep('idle');
           if (pendingService) setActiveModule(pendingService.id);
@@ -571,6 +738,134 @@ export default function App() {
             </button>
           </div>
 
+          {/* High-Tech Adaptive GPS Geofence & Proximity Radar HUD */}
+          <div className="geometric-card bg-slate-950 text-slate-100 border-primary/20 shadow-2xl p-6 sm:p-8 mb-12 relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+            {/* Background scanner background grids */}
+            <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#12c2e9_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+            <div className="corner-accent border-primary/40" />
+
+            <div className="flex flex-col lg:flex-row gap-8 items-center relative z-10">
+              {/* Radar Sweep Animation Frame */}
+              <div className="relative w-40 h-40 rounded-full border border-primary/30 bg-primary/5 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+                {/* Pulsing radar grids */}
+                <div className="absolute inset-2 rounded-full border border-primary/10" />
+                <div className="absolute inset-8 rounded-full border border-primary/15" />
+                <div className="absolute inset-16 rounded-full border border-primary/20" />
+                {/* Crosshairs */}
+                <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[1px] bg-primary/10" />
+                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[1px] bg-primary/10" />
+                
+                {/* Sweeping line */}
+                <div className="absolute inset-0 origin-center animate-[spin_5s_linear_infinite] bg-gradient-to-tr from-primary/30 via-transparent to-transparent rounded-full" />
+                
+                {/* Dynamic Blips indicating nearby units coordinates */}
+                {nearUnits.map((u, i) => {
+                  const angle = (i * (360 / Math.max(1, nearUnits.length)) + 45) * (Math.PI / 180);
+                  const radius = 25 + (i * 12) % 40; // pseudo random radius
+                  const left = `calc(50% + ${Math.cos(angle) * radius}px - 4px)`;
+                  const top = `calc(50% + ${Math.sin(angle) * radius}px - 4px)`;
+                  return (
+                    <div 
+                      key={u.id}
+                      className="absolute w-2.5 h-2.5 rounded-full bg-primary/80 border border-white flex items-center justify-center shadow-lg"
+                      style={{ left, top }}
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                    </div>
+                  );
+                })}
+                {/* User position center marker */}
+                <div className="absolute w-3.5 h-3.5 rounded-full bg-primary border-2 border-white z-20 shadow-lg animate-pulse" />
+              </div>
+
+              {/* Telemetry and Nearby Units Information (The "Cerca Adaptada") */}
+              <div className="flex-1 w-full space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-primary/10 border border-primary/30 text-primary uppercase text-[8px] tracking-[0.25em] font-mono mb-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
+                      {activeRadarService ? `PROX_GEOFENCE_ACTIVE` : `GEOFENCE_ON_STANDBY`}
+                    </div>
+                    <h3 className="text-sm font-bold uppercase tracking-[0.2em] font-heading text-white">
+                      {activeRadarService 
+                        ? `RADAR: ${t(activeRadarService.titleKey)} (NODE_${activeRadarService.id.toUpperCase()})` 
+                        : "SISTEMA DE CERCA ADAPTADA & GPS RECEPTOR AUTOMÁTICO"
+                      }
+                    </h3>
+                  </div>
+
+                  <div className="font-mono text-[10px] text-right text-slate-400">
+                    <p className="font-bold text-white uppercase tracking-wider">Coordinates</p>
+                    {isSyncingGps ? (
+                      <p className="text-primary animate-pulse font-bold uppercase tracking-widest">AQUIRING SIGNAL...</p>
+                    ) : userCoords ? (
+                      <p className="text-emerald-400 font-bold">LAT: {userCoords.lat.toFixed(5)} | LNG: {userCoords.lng.toFixed(5)}</p>
+                    ) : (
+                      <p className="text-slate-500 font-bold">GPS_NOT_ESTABLISHED</p>
+                    )}
+                  </div>
+                </div>
+
+                {activeRadarService ? (
+                  <div>
+                    <p className="text-[9px] font-mono text-slate-400 uppercase tracking-widest mb-3">
+                      Unidades mais próximas focadas na sua função:
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {nearUnits.map((u, i) => (
+                        <div key={u.id} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-lg hover:border-primary/25 transition-all">
+                          <div className="flex items-center gap-3">
+                            <span className="w-5 h-5 bg-primary/10 border border-primary/30 text-[10px] font-mono font-bold text-primary flex items-center justify-center rounded">
+                              0{i+1}
+                            </span>
+                            <div>
+                              <p className="text-[10px] font-mono text-white tracking-wide font-bold">{u.name}</p>
+                              <p className="text-[8px] font-mono text-slate-400 uppercase tracking-wider">Confiabilidade: {u.reliability}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="text-right font-mono">
+                            <p className="text-[10px] text-emerald-400 font-bold animate-pulse">{u.distance} KM</p>
+                            <p className="text-[7.5px] text-slate-400 tracking-tighter uppercase font-bold">Próximo a você</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-white/5 mt-4">
+                      {['ride', 'delivery', 'sober', 'marketplace', 'payment'].includes(activeRadarService.id) && (
+                        <Button
+                          onClick={() => setActiveModule(activeRadarService.id)}
+                          className="h-10 px-5 bg-primary text-white font-bold uppercase tracking-widest text-[9px] shadow-lg shadow-primary/20"
+                        >
+                          Conectar Mapa Local ({activeRadarService.id.toUpperCase()})
+                        </Button>
+                      )}
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => triggerGpsSync(activeRadarService)}
+                        className="h-10 px-4 border-white/10 text-slate-400 hover:text-white uppercase tracking-widest text-[9px] font-bold"
+                      >
+                        Recalibrar Sinal Geocerca
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-2 text-center sm:text-left">
+                    <p className="text-xs uppercase tracking-widest text-slate-400 leading-relaxed font-bold">
+                      Clique em qualquer um dos ícones operacionais de aplicativo abaixo para invocar a função.
+                    </p>
+                    <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-1">
+                      O sistema iniciará automaticamente a telemetria GPS e calibrará as unidades ("personas") mais próximas de suas coordenadas geográficas reais.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {SERVICES.map((service, idx) => (
               <motion.div
@@ -580,7 +875,10 @@ export default function App() {
                 transition={{ delay: idx * 0.05 }}
                 viewport={{ once: true }}
               >
-                <div className="geometric-card group cursor-pointer hover:border-primary/30 hover:bg-white shadow-sm hover:shadow-xl transition-all h-full bg-slate-50/50">
+                <div 
+                  onClick={() => handleServiceInvoke(service)}
+                  className="geometric-card group cursor-pointer hover:border-primary/30 hover:bg-white shadow-sm hover:shadow-xl transition-all h-full bg-slate-50/50"
+                >
                   <div className="corner-accent" />
                   <div className="flex justify-between items-start mb-6">
                     <div className="w-10 h-10 border border-slate-100 flex items-center justify-center bg-white group-hover:bg-primary group-hover:text-white transition-all">
@@ -594,7 +892,10 @@ export default function App() {
                   <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-100">
                     <span className="text-[10px] font-mono text-emerald-600 uppercase">{t('operational_status')}</span>
                     <button 
-                      onClick={() => handleServiceInvoke(service)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleServiceInvoke(service);
+                      }}
                       disabled={invokingId === service.id}
                       className={`text-[10px] font-mono uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer ${
                         invokingId === service.id 
