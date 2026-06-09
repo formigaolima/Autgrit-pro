@@ -19,7 +19,10 @@ import {
   X,
   Zap,
   ArrowRight,
-  CheckCircle2
+  CheckCircle2,
+  User,
+  Plane,
+  Ship
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RideHailingMap } from './components/RideHailingMap';
@@ -31,6 +34,9 @@ import { NotificationCenter, SystemAlert } from './components/NotificationCenter
 import { DeliveryModule } from './components/DeliveryModule';
 import { MarketplaceModule } from './components/MarketplaceModule';
 import { PaymentModule } from './components/PaymentModule';
+import { ComplianceVerifier } from './components/ComplianceVerifier';
+import { AviationModule } from './components/AviationModule';
+import { MarineModule } from './components/MarineModule';
 import { useTranslation } from './lib/i18n';
 import { Bell, Command as CommandIcon, ShoppingCart, CreditCard, HeartPulse, GraduationCap, Package, Github, Twitter, Linkedin } from 'lucide-react';
 
@@ -98,6 +104,20 @@ const SERVICES = [
     descKey: 'service_education_desc' as const,
     icon: GraduationCap,
     color: 'from-blue-600 to-indigo-500'
+  },
+  {
+    id: 'aviation',
+    titleKey: 'service_aviation_title' as const,
+    descKey: 'service_aviation_desc' as const,
+    icon: Plane,
+    color: 'from-sky-500 to-blue-600'
+  },
+  {
+    id: 'marine',
+    titleKey: 'service_marine_title' as const,
+    descKey: 'service_marine_desc' as const,
+    icon: Ship,
+    color: 'from-cyan-500 to-indigo-600'
   }
 ];
 
@@ -123,7 +143,7 @@ export default function App() {
   const { t, currentLanguage, setLanguage, isTranslating, supportedLanguages } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [activeModule, setActiveModule] = useState<'idle' | 'ride' | 'delivery' | 'sober' | 'marketplace' | 'payment'>('idle');
+  const [activeModule, setActiveModule] = useState<'idle' | 'ride' | 'delivery' | 'sober' | 'marketplace' | 'payment' | 'aviation' | 'marine'>('idle');
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -142,6 +162,12 @@ export default function App() {
   const [activeRadarService, setActiveRadarService] = useState<any | null>(null);
   const [showRadarAlert, setShowRadarAlert] = useState<boolean>(false);
   const [isSyncingGps, setIsSyncingGps] = useState<boolean>(false);
+  
+  // Compliance / KYC Document States
+  const [isComplianceOpen, setIsComplianceOpen] = useState(false);
+  const [complianceType, setComplianceType] = useState<'provider' | 'receiver'>('provider');
+  const [providerCompliance, setProviderCompliance] = useState<any | null>(null);
+  const [receiverCompliance, setReceiverCompliance] = useState<any | null>(null);
   
   // Dynamic stats
   const [stats, setStats] = useState({
@@ -162,7 +188,9 @@ export default function App() {
       marketplace: ['Hardware Sourcing Hub 02', 'Secure Wearable Vault', 'Hardware Enclave Alpha', 'Telemetry Merchant'],
       payment: ['P2P Collateral Rebalancer', 'Uniswap Gateway Delta', 'USDT Instant Liquidity', 'Tactical Swap Engine'],
       health: ['Med-Link Drone Omega', 'Mobile Trauma Uplink 3', 'Pharma Courier Relay-X', 'Bio-Telemetry Monitor'],
-      education: ['Knowledge Matrix Relay', 'Ed-Chain Node #45', 'Skill Certifier Oracle', 'Algonquin Mentor-Node']
+      education: ['Knowledge Matrix Relay', 'Ed-Chain Node #45', 'Skill Certifier Oracle', 'Algonquin Mentor-Node'],
+      aviation: ['eVTOL Alpha-Copter #01', 'Captain Sarah Jenkins (Pilot)', 'Gulfstream G650 - JetAir', 'eVTOL Beta-Copter #05', 'First Officer Lucas B.'],
+      marine: ['Azimut Yacht - Captain Leo', 'Sailing Vessel Delta', 'Capitão Marco Rossi (Sailor)', 'Amphibious Patrol Quad', 'Sea-Line Cruiser - Anna S.']
     };
 
     const names = mockNames[service.id as keyof typeof mockNames] || [
@@ -289,6 +317,12 @@ export default function App() {
           if (dbData.systemStats) {
             setStats(prev => ({ ...prev, ...dbData.systemStats }));
           }
+          if (dbData.providerCompliance) {
+            setProviderCompliance(dbData.providerCompliance);
+          }
+          if (dbData.receiverCompliance) {
+            setReceiverCompliance(dbData.receiverCompliance);
+          }
         }
       } catch (err) {
         console.error("Failed to load initial database state:", err);
@@ -345,7 +379,7 @@ export default function App() {
     triggerGpsSync(service);
 
     if (!isWalletConnected) {
-      if (['ride', 'delivery', 'sober', 'marketplace', 'payment'].includes(service.id)) {
+      if (['ride', 'delivery', 'sober', 'marketplace', 'payment', 'aviation', 'marine'].includes(service.id)) {
         setActiveModule(service.id);
         const resolvedTitle = service.titleKey ? t(service.titleKey) : service.title;
         addAlert('operation', 'MODULE_INVOKED', `Establishing secure link to ${resolvedTitle}`);
@@ -484,6 +518,16 @@ export default function App() {
         {activeModule === 'payment' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <PaymentModule balance={walletBalance} onClose={() => setActiveModule('idle')} />
+          </motion.div>
+        )}
+        {activeModule === 'aviation' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <AviationModule onClose={() => setActiveModule('idle')} />
+          </motion.div>
+        )}
+        {activeModule === 'marine' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <MarineModule onClose={() => setActiveModule('idle')} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -658,7 +702,7 @@ export default function App() {
       <main id="overview" className="container mx-auto px-4 sm:px-6 lg:px-8 mt-28 md:mt-40">
         {/* Navigation Menu Rail */}
         <div className="flex gap-8 border-b border-slate-100 mb-20 pb-4 overflow-x-auto no-scrollbar">
-           {['Overview', 'Topology', 'Resources', 'Security', 'Logs'].map((item, idx) => (
+           {['Overview', 'Compliance', 'Topology', 'Resources', 'Security', 'Logs'].map((item, idx) => (
              <a key={item} href={`#${item.toLowerCase()}`} className={`group cursor-pointer flex items-center gap-3 shrink-0 ${idx > 0 ? 'opacity-40 hover:opacity-100' : ''}`}>
                <span className="text-[10px] text-slate-400 uppercase tracking-widest group-hover:text-primary">0{idx + 1}</span>
                <p className="text-sm text-foreground font-medium tracking-wide uppercase">{item}</p>
@@ -916,6 +960,120 @@ export default function App() {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </section>
+
+        {/* Compliance / Document Enclave Section */}
+        <section id="compliance" className="mb-24">
+          <div className="flex justify-between items-end border-b border-slate-100 pb-6 mb-12">
+            <div>
+              <h2 className="text-3xl font-heading font-bold uppercase">ENCLAVE DE SEGURANÇA & COMPLIANCE</h2>
+              <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-2">Leis de segurança de transporte privado e reservateza de dados criminais</p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-3 py-1 font-mono uppercase font-bold rounded-full flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
+                CONTEÚDO SEGURO
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Prestadores Card */}
+            <div className="geometric-card bg-slate-900 border-primary/20 text-slate-100 p-8 flex flex-col justify-between relative overflow-hidden group">
+              <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(#12c2e9_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+              <div className="corner-accent border-primary/30" />
+              
+              <div>
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-12 h-12 bg-primary/10 border border-primary/30 flex items-center justify-center text-primary rounded-lg">
+                    <User className="w-6 h-6" />
+                  </div>
+                  {providerCompliance ? (
+                    <span className="text-[9px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 uppercase font-bold rounded">
+                      REGISTRADO L0 - ATIVO
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 uppercase font-bold rounded">
+                      REQUER DOCUMENTAÇÃO
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-xl font-heading font-bold mb-4 uppercase tracking-wider text-white">
+                  PRESTADORES DE SERVIÇOS
+                </h3>
+                <p className="text-[11.5px] font-mono text-slate-400 leading-relaxed mb-8 uppercase tracking-wide">
+                  Seja um motorista parceiro, sober-pilot, entregador ou técnico local. Cadastre seus documentos obrigatórios como CNH, RG, comprovante de residência e certidões criminais de segurança para autorização imediata nos serviços urbanos. No Enclave de Dados AutGrit, as informações são criptografadas localmente com nível de sigilo total e reservateza de ponta.
+                </p>
+
+                {providerCompliance && (
+                  <div className="p-4 bg-white/5 border border-white/5 rounded-lg mb-6 font-mono text-[10px] space-y-2">
+                    <p className="text-slate-450">NOME: <span className="text-white font-bold">{providerCompliance.fullName}</span></p>
+                    <p className="text-slate-450">REGISTRO: <span className="text-white font-bold">{providerCompliance.docType} {providerCompliance.docNumber}</span></p>
+                    <p className="text-slate-450">CHAVE HASH: <span className="text-primary font-bold">{providerCompliance.witnessHash}</span></p>
+                  </div>
+                )}
+              </div>
+
+              <Button
+                onClick={() => {
+                  setComplianceType('provider');
+                  setIsComplianceOpen(true);
+                }}
+                className="w-full h-12 bg-primary text-white font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 cursor-pointer"
+              >
+                {providerCompliance ? "Gerenciar Documentos de Prestador" : "Cadastrar Documentos de Prestador"}
+              </Button>
+            </div>
+
+            {/* Recebedores Card */}
+            <div className="geometric-card bg-slate-900 border-primary/20 text-slate-100 p-8 flex flex-col justify-between relative overflow-hidden group">
+              <div className="absolute inset-0 opacity-[0.02] bg-[radial-gradient(#12c2e9_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+              <div className="corner-accent border-primary/30" />
+
+              <div>
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-12 h-12 bg-primary/10 border border-primary/30 flex items-center justify-center text-primary rounded-lg">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  {receiverCompliance ? (
+                    <span className="text-[9px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 uppercase font-bold rounded">
+                      ATENTADO L0 - SEGURO
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 uppercase font-bold rounded">
+                      CADASTRO PENDENTE
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-xl font-heading font-bold mb-4 uppercase tracking-wider text-white">
+                  RECEBEDORES DE SERVIÇOS (CLIENTES)
+                </h3>
+                <p className="text-[11.5px] font-mono text-slate-400 leading-relaxed mb-8 uppercase tracking-wide">
+                  Como passageiro ou recebedor de qualquer item e serviço urbano do ecossistema, o upload e autenticação de sua identidade RG ou Passaporte garante o mais estrito nível de integridade no momento das corridas de segurança ou compartilhamento residencial. O sigilo judicial e lei federal de privacidade asseguram sua reservateza criptográfica completa.
+                </p>
+
+                {receiverCompliance && (
+                  <div className="p-4 bg-white/5 border border-white/5 rounded-lg mb-6 font-mono text-[10px] space-y-2">
+                    <p className="text-slate-450">PARCEIRO: <span className="text-white font-bold">{receiverCompliance.fullName}</span></p>
+                    <p className="text-slate-450">DOCUMENTO: <span className="text-white font-bold">[{receiverCompliance.docType}] {receiverCompliance.docNumber}</span></p>
+                    <p className="text-slate-450">CÓDIGO DE SEGURANÇA: <span className="text-primary font-bold">{receiverCompliance.witnessHash}</span></p>
+                  </div>
+                )}
+              </div>
+
+              <Button
+                onClick={() => {
+                  setComplianceType('receiver');
+                  setIsComplianceOpen(true);
+                }}
+                className="w-full h-12 bg-slate-800 text-white font-bold uppercase tracking-widest text-[10px] hover:bg-slate-700 border border-white/10 cursor-pointer"
+              >
+                {receiverCompliance ? "Gerenciar Documentos de Recebedor" : "Cadastrar Documentos de Recebedor"}
+              </Button>
+            </div>
           </div>
         </section>
 
@@ -1195,6 +1353,27 @@ export default function App() {
            <p className="text-primary opacity-50 font-bold">Local_Crd: SYST_0x2900_V</p>
         </div>
       </footer>
+
+      <AnimatePresence>
+        {isComplianceOpen && (
+          <ComplianceVerifier
+            initialType={complianceType}
+            onClose={() => setIsComplianceOpen(false)}
+            onRegistrationComplete={(type, registrationData) => {
+              if (type === 'provider') {
+                setProviderCompliance(registrationData);
+              } else {
+                setReceiverCompliance(registrationData);
+              }
+              if (registrationData) {
+                addAlert('success', 'COMPLIANCE_AUTHORIZED', `Compliance status finalized for ${type.toUpperCase()}: ${registrationData.fullName}. Security level L0 verified.`);
+              } else {
+                addAlert('security', 'COMPLIANCE_REVOKED', `Compliance status and security credentials revoked for ${type.toUpperCase()}.`);
+              }
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <ChatWidget />
       <CommandPalette 
