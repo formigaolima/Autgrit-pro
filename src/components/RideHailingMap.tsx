@@ -106,6 +106,9 @@ export const RideHailingMap: React.FC<{ onClose: () => void }> = ({ onClose }) =
   const [activeBooking, setActiveBooking] = useState<MockCar | null>(null);
   const [bookingStatus, setBookingStatus] = useState<'idle' | 'confirming' | 'requesting' | 'confirmed'>('idle');
   const [selectedDriver, setSelectedDriver] = useState<MockCar | null>(null);
+  const [roleMode, setRoleMode] = useState<'cliente' | 'lavoratore'>('cliente');
+  const [driverStatus, setDriverStatus] = useState<string>('Disponibile in Turno');
+  const [telemetryLogs, setTelemetryLogs] = useState<string[]>([]);
 
   // Helpers
   const getETA = (pos1: [number, number], pos2: [number, number]) => {
@@ -473,9 +476,146 @@ export const RideHailingMap: React.FC<{ onClose: () => void }> = ({ onClose }) =
           </button>
         </div>
 
-        {/* Map Container */}
-        <div className="flex-1 relative overflow-hidden bg-white">
-          {loading ? (
+        {/* Map Container split into Left Sidebar and Right Map */}
+        <div className="flex-1 relative overflow-hidden bg-white flex flex-col md:flex-row">
+          {/* Left Console Sidebar */}
+          <div className="w-full md:w-[380px] border-b md:border-b-0 md:border-r border-slate-100 flex flex-col z-20 space-y-5 bg-white shrink-0 p-6 overflow-y-auto">
+            {/* Due Tasti di Ruolo: Cliente e Conducente / Autista */}
+            <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+              <button
+                onClick={() => setRoleMode('cliente')}
+                className={`py-2 text-[10px] font-mono tracking-wider uppercase font-bold rounded-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  roleMode === 'cliente'
+                    ? 'bg-primary text-white shadow-sm font-extrabold'
+                    : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                }`}
+              >
+                <User className="w-3.5 h-3.5" />
+                Clienti
+              </button>
+              <button
+                onClick={() => setRoleMode('lavoratore')}
+                className={`py-2 text-[10px] font-mono tracking-wider uppercase font-bold rounded-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  roleMode === 'lavoratore'
+                    ? 'bg-primary text-white shadow-sm font-extrabold'
+                    : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Autisti / Conducenti
+              </button>
+            </div>
+
+            {roleMode === 'lavoratore' ? (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-5"
+              >
+                <div className="p-4 bg-slate-900 text-white border border-primary/30 rounded-xl space-y-3 relative overflow-hidden">
+                  <div className="absolute right-3 top-3 w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  <h4 className="text-[10px] font-mono tracking-widest text-primary/80 uppercase font-bold">TERMINALE CO-PILOTA AUTISTA</h4>
+                  <p className="text-xs font-bold font-mono">STATO OPERATIVO: <span className="text-emerald-450 uppercase">{driverStatus}</span></p>
+                  <p className="text-[10px] text-slate-400 leading-relaxed uppercase">
+                    Effettua corse per i passeggeri del Piemonte. Il 90% di ogni tariffa viene accreditato istantaneamente sul tuo conto, mentre la piattaforma trattiene il 10% di royalty della rete.
+                  </p>
+
+                  <div className="flex gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setDriverStatus('In Servizio attivo');
+                        setTelemetryLogs(prev => [`[${new Date().toLocaleTimeString()}] DRIVER_ON_ROAD: GPS trasmesso. Pronti alle prenotazioni.`, ...prev]);
+                      }}
+                      className="h-8 text-[8.5px] bg-primary text-white hover:bg-primary/90 uppercase tracking-wider font-extrabold flex-1 cursor-pointer"
+                    >
+                      Avvia Servizio
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setDriverStatus('Disponibile in Turno');
+                        setTelemetryLogs(prev => [`[${new Date().toLocaleTimeString()}] COMPLIANT: Autista idoneo in stato pronto.`, ...prev]);
+                      }}
+                      className="h-8 text-[8.5px] border-white/20 text-slate-350 hover:bg-white/10 hover:text-white uppercase tracking-wider font-extrabold flex-1 cursor-pointer"
+                    >
+                      Dichiara Pronto
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="p-4 border border-slate-150 rounded-xl bg-slate-50 space-y-3">
+                  <h4 className="text-[9.5px] font-mono text-slate-400 uppercase tracking-widest font-extrabold font-bold">CONTO ADYEN SPLIT</h4>
+                  <div className="divide-y divide-slate-150 font-mono text-[10px]">
+                    <div className="flex py-2 justify-between items-center text-slate-600">
+                      <span className="font-bold">Sub-Account ID:</span>
+                      <span className="text-slate-800 font-bold">SUB_ADY_1802_TAXI</span>
+                    </div>
+                    <div className="flex py-2 justify-between items-center text-slate-650">
+                      <span className="font-bold font-bold">Split Autista:</span>
+                      <span className="text-emerald-600 font-bold font-bold">90%</span>
+                    </div>
+                    <div className="flex py-2 justify-between items-center text-slate-650">
+                      <span className="font-bold">Stato Profilo:</span>
+                      <span className="text-emerald-600 font-bold font-mono">STANDBY_OK</span>
+                    </div>
+                  </div>
+                </div>
+
+                {telemetryLogs.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-[9.5px] font-mono text-slate-400 uppercase tracking-widest font-extrabold font-bold">LOGS MOBILITÀ AUTISTA</h4>
+                    <div className="p-3 bg-slate-100 rounded-lg border border-slate-200 h-32 overflow-y-auto space-y-1 overflow-x-hidden">
+                      {telemetryLogs.map((log, index) => (
+                        <p key={index} className="text-[8.5px] font-mono text-slate-600 truncate uppercase">{log}</p>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-4"
+              >
+                <div className="p-4 border border-primary/20 bg-primary/5 rounded-xl space-y-3">
+                  <h4 className="text-[10px] font-mono text-primary uppercase tracking-widest font-extrabold text-center">ELENCO UNITÀ VICINE</h4>
+                  <p className="text-[10px] text-slate-500 leading-relaxed uppercase">
+                    Seleziona un'unità operativa direttamente sulla mappa geopolitica interattiva o clicca su un marker per invocare un passaggio.
+                  </p>
+                </div>
+
+                <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                  {cars.map((car) => (
+                    <div 
+                      key={car.id} 
+                      onClick={() => handleBooking(car)}
+                      className="p-3 bg-slate-50 hover:bg-slate-100/80 border border-slate-150 rounded-lg cursor-pointer transition-all flex items-center justify-between group"
+                    >
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-1.5 h-1.5 rounded-full ${car.status === 'OPERATIONAL' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                          <p className="text-[11px] font-bold font-mono text-foreground">{car.label}</p>
+                        </div>
+                        <p className="text-[9.5px] text-slate-400 font-mono mt-0.5">{car.model} | {car.driver}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] font-mono bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase tracking-wider group-hover:bg-primary group-hover:text-white transition-all">
+                          Richiedi
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Right Map */}
+          <div className="flex-1 relative h-full min-h-[300px]">
+            {loading ? (
              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-50">
                 <div className="w-12 h-12 border-2 border-primary border-t-transparent animate-spin mb-4 rounded-full" />
                 <p className="text-[10px] font-mono text-slate-400 uppercase tracking-[0.5em] font-bold">Establishing Handshake...</p>
@@ -665,6 +805,7 @@ export const RideHailingMap: React.FC<{ onClose: () => void }> = ({ onClose }) =
              </div>
           </div>
         </div>
+      </div>
 
         {/* Footer info bar */}
         <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center text-[9px] font-mono uppercase tracking-[0.2em] text-slate-300 font-bold">

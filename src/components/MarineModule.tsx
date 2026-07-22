@@ -43,6 +43,9 @@ export const MarineModule: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const [units, setUnits] = useState<MarineUnit[]>([]);
   const [selectedUnit, setSelectedUnit] = useState<MarineUnit | null>(null);
   const [requestStatus, setRequestStatus] = useState<'idle' | 'requesting' | 'handshake' | 'confirmed'>('idle');
+  const [roleMode, setRoleMode] = useState<'cliente' | 'lavoratore'>('cliente');
+  const [captainStatus, setCaptainStatus] = useState<string>('Disponibile per Turno');
+  const [telemetryLogs, setTelemetryLogs] = useState<string[]>([]);
 
   useEffect(() => {
     const handleGeo = (position: any) => {
@@ -133,7 +136,104 @@ export const MarineModule: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {requestStatus === 'idle' ? (
+          {/* Due Tasti di Ruolo: Cliente e Conducente / Capitano */}
+          <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200">
+            <button
+              onClick={() => {
+                setRoleMode('cliente');
+                setRequestStatus('idle');
+              }}
+              className={`py-2 text-[10px] font-mono tracking-wider uppercase font-bold rounded-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                roleMode === 'cliente'
+                  ? 'bg-cyan-500 text-white shadow-sm font-extrabold'
+                  : 'text-slate-500 hover:text-slate-800 bg-transparent'
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              Clienti
+            </button>
+            <button
+              onClick={() => setRoleMode('lavoratore')}
+              className={`py-2 text-[10px] font-mono tracking-wider uppercase font-bold rounded-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                roleMode === 'lavoratore'
+                  ? 'bg-cyan-500 text-white shadow-sm font-extrabold'
+                  : 'text-slate-500 hover:text-slate-800 bg-transparent'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Conducenti / Capitani
+            </button>
+          </div>
+
+          {roleMode === 'lavoratore' ? (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-5"
+            >
+              <div className="p-4 bg-slate-900 text-white border border-cyan-500/30 rounded-xl space-y-3 relative overflow-hidden">
+                <div className="absolute right-3 top-3 w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <h4 className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase font-bold">TERMINALE CAPITANO / MARINAIO</h4>
+                <p className="text-xs font-bold font-mono">STATO OPERATIVO: <span className="text-emerald-450 uppercase">{captainStatus}</span></p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-relaxed">
+                  Collega il tuo yacht o scafo alla duna centrale dei dividendi Adyen Split. Il 90% di ogni noleggio o escursione prenotato dai passeggeri verrà liquidato direttamente nel tuo sub-account di servizio.
+                </p>
+
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setCaptainStatus('In Mare / Attivo');
+                      setTelemetryLogs(prev => [`[${new Date().toLocaleTimeString()}] PING_NAUTICO: Coordinate AIS trasmesse alla capitaneria di porto.`, ...prev]);
+                    }}
+                    className="h-8 text-[8.5px] bg-cyan-500 text-white hover:bg-cyan-600 uppercase tracking-wider font-extrabold flex-1 cursor-pointer"
+                  >
+                    Trasmetti AIS GPS
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setCaptainStatus('Disponibile per Turno');
+                      setTelemetryLogs(prev => [`[${new Date().toLocaleTimeString()}] NAV_OK: Stato pronto barca ripristinato.`, ...prev]);
+                    }}
+                    className="h-8 text-[8.5px] border-white/20 text-slate-350 hover:bg-white/10 hover:text-white uppercase tracking-wider font-extrabold flex-1 cursor-pointer"
+                  >
+                    Pronto a Salpare
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-4 border border-slate-150 rounded-xl bg-slate-50 space-y-3">
+                <h4 className="text-[9.5px] font-mono text-slate-400 uppercase tracking-widest font-extrabold">CONTO ADYEN SPLIT SECTOR</h4>
+                <div className="divide-y divide-slate-150 font-mono text-[10px]">
+                  <div className="flex py-2 justify-between items-center text-slate-600">
+                    <span className="font-bold uppercase">Sub-ID:</span>
+                    <span className="text-slate-800 font-bold">SUB_ADY_9831_YACHT</span>
+                  </div>
+                  <div className="flex py-2 justify-between items-center text-slate-650">
+                    <span className="font-bold uppercase">Split quota marinaio:</span>
+                    <span className="text-emerald-600 font-bold">90%</span>
+                  </div>
+                  <div className="flex py-2 justify-between items-center text-slate-650">
+                    <span className="font-bold uppercase">Stato Nav_Verify:</span>
+                    <span className="text-emerald-600 font-bold font-mono">OCEANIC_L0_PASSED</span>
+                  </div>
+                </div>
+              </div>
+
+              {telemetryLogs.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-[9.5px] font-mono text-slate-400 uppercase tracking-widest font-extrabold font-bold">REGISTRO SPOSTAMENTI NAVE</h4>
+                  <div className="p-3 bg-slate-100 rounded-lg border border-slate-200 h-28 overflow-y-auto space-y-1">
+                    {telemetryLogs.map((log, index) => (
+                      <p key={index} className="text-[8.5px] font-mono text-slate-600 truncate uppercase">{log}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ) : requestStatus === 'idle' ? (
             <>
               <div className="p-4 bg-cyan-50 border border-cyan-100 flex items-start gap-3 rounded-lg">
                 <Anchor className="w-5 h-5 text-cyan-600 shrink-0 mt-0.5" />
