@@ -190,7 +190,7 @@ export const DeliveryModule: React.FC<{ onClose: () => void }> = ({ onClose }) =
               </div>
 
               <div className="p-4 border border-slate-150 rounded-xl bg-slate-50 space-y-3">
-                <h4 className="text-[9.5px] font-mono text-slate-400 uppercase tracking-widest font-extrabold">RIPARTIZIONE ADYEN COMMISSIVITY</h4>
+                <h4 className="text-[9.5px] font-mono text-slate-400 uppercase tracking-widest font-extrabold">RIPARTIZIONE ADYEN & SEGURO</h4>
                 <div className="divide-y divide-slate-150 font-mono text-[10px]">
                   <div className="flex py-2 justify-between items-center text-slate-600">
                     <span className="font-bold uppercase">Codice SubAccount:</span>
@@ -201,8 +201,12 @@ export const DeliveryModule: React.FC<{ onClose: () => void }> = ({ onClose }) =
                     <span className="text-emerald-600 font-bold font-bold">90%</span>
                   </div>
                   <div className="flex py-2 justify-between items-center text-slate-650">
-                    <span className="font-bold uppercase">Accertamento Legale:</span>
-                    <span className="text-emerald-600 font-bold font-mono">VERIFIED</span>
+                    <span className="font-bold uppercase">Seguro Veicular Obrigatório:</span>
+                    <span className="text-emerald-600 font-bold font-mono">ATIVO (COBERTURA TOTAL)</span>
+                  </div>
+                  <div className="flex py-2 justify-between items-center text-slate-650">
+                    <span className="font-bold uppercase">Habilitação:</span>
+                    <span className="text-slate-800 font-bold font-mono">PADRÃO UNIVERSAL (L0)</span>
                   </div>
                 </div>
               </div>

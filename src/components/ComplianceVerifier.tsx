@@ -30,7 +30,15 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
   const [role, setRole] = useState<'provider' | 'receiver'>(initialType);
   const [fullName, setFullName] = useState('');
   const [docNumber, setDocNumber] = useState('');
-  const [docType, setDocType] = useState('RG/CNH');
+  const [docType, setDocType] = useState('CNH / Habilitação Padrão');
+  
+  // Mandatory Vehicle Insurance fields
+  const [hasVehicle, setHasVehicle] = useState(true);
+  const [insuranceCompany, setInsuranceCompany] = useState('Porto Seguro / Allianz Global');
+  const [insurancePolicyNumber, setInsurancePolicyNumber] = useState('');
+  const [insuranceCoverageType, setInsuranceCoverageType] = useState('Cobertura Total (RCF-V + Passageiros e Terceiros)');
+  const [insuranceExpiry, setInsuranceExpiry] = useState('2027-12-31');
+
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -51,13 +59,19 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
             setSavedData(dbData[key]);
             setFullName(dbData[key].fullName || '');
             setDocNumber(dbData[key].docNumber || '');
-            setDocType(dbData[key].docType || 'RG/CNH');
+            setDocType(dbData[key].docType || 'CNH / Habilitação Padrão');
+            setHasVehicle(dbData[key].hasVehicle ?? true);
+            setInsuranceCompany(dbData[key].insuranceCompany || 'Porto Seguro / Allianz Global');
+            setInsurancePolicyNumber(dbData[key].insurancePolicyNumber || '');
+            setInsuranceCoverageType(dbData[key].insuranceCoverageType || 'Cobertura Total (RCF-V + Passageiros e Terceiros)');
+            setInsuranceExpiry(dbData[key].insuranceExpiry || '2027-12-31');
             setUploadedFiles(dbData[key].uploadedFiles || []);
             setTermsAccepted(dbData[key].termsAccepted || false);
           } else {
             setSavedData(null);
             setFullName('');
             setDocNumber('');
+            setInsurancePolicyNumber('');
             setUploadedFiles([]);
             setTermsAccepted(false);
           }
@@ -123,6 +137,11 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
       fullName,
       docNumber,
       docType,
+      hasVehicle: role === 'provider' ? hasVehicle : false,
+      insuranceCompany: role === 'provider' ? insuranceCompany : undefined,
+      insurancePolicyNumber: role === 'provider' ? (insurancePolicyNumber || 'POL-AUT-2026-9884') : undefined,
+      insuranceCoverageType: role === 'provider' ? insuranceCoverageType : undefined,
+      insuranceExpiry: role === 'provider' ? insuranceExpiry : undefined,
       uploadedFiles,
       termsAccepted,
       status: 'VERIFIED_LEVEL_0',
@@ -152,7 +171,7 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
             {
               id: 'KYC-' + Date.now(),
               type: 'SEC',
-              message: `SYS_REGISTRY: Compliance documents parsed successfully for ${role.toUpperCase()} (${fullName}). Status: SECURE_L0`,
+              message: `SYS_REGISTRY: Compliance documents parsed successfully for ${role.toUpperCase()} (${fullName}). Seguro Veicular Obrigatório registrado. Status: SECURE_L0`,
               timestamp: new Date().toLocaleTimeString('pt-BR')
             }
           ]
@@ -291,17 +310,18 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-800">
-                    CREDENCIAIS DE SEGURANÇA ATIVAS (NÍVEL L-0)
+                    CREDENCIAIS DE SEGURANÇA E SEGURO ATIVAS (NÍVEL L-0)
                   </h4>
                   <p className="text-[10.5px] text-emerald-700 leading-relaxed mt-1 font-medium">
-                    Seus dados de compliance e identidade foram autenticados de acordo com as leis federais de transporte privado e segurança criptográfica. Seus dados estão protegidos com reservateza absoluta.
+                    Seus dados de compliance foram autenticados. Restrições de licenças específicas por país foram substituídas pela validação universal, com <strong>Seguro Veicular Obrigatório</strong> ativo e registrado para proteção de 100% dos passageiros e terceiros.
                   </p>
                 </div>
               </div>
 
               <div className="border border-slate-150 rounded-xl overflow-hidden text-sm bg-slate-50/50">
-                <div className="p-4 bg-slate-100/50 border-b border-slate-150 font-mono text-[9px] uppercase tracking-wider text-slate-500 font-bold">
-                  DADOS DO REGISTRO DE SEGURANÇA
+                <div className="p-4 bg-slate-100/50 border-b border-slate-150 font-mono text-[9px] uppercase tracking-wider text-slate-500 font-bold flex justify-between items-center">
+                  <span>DADOS DO REGISTRO DE SEGURANÇA</span>
+                  <span className="text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded text-[8px] font-mono font-bold">SEGURO OBRIGATÓRIO ATIVO</span>
                 </div>
                 <div className="divide-y divide-slate-150 font-mono text-[10.5px]">
                   <div className="flex p-4 justify-between items-center bg-white">
@@ -309,15 +329,31 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
                     <span className="text-slate-800 font-bold uppercase">{savedData.fullName}</span>
                   </div>
                   <div className="flex p-4 justify-between items-center bg-white">
-                    <span className="text-slate-400 uppercase font-bold">Tipo & Doc:</span>
-                    <span className="text-slate-800 font-bold uppercase">[{savedData.docType}] {savedData.docNumber}</span>
+                    <span className="text-slate-400 uppercase font-bold">Habilitação / Doc:</span>
+                    <span className="text-slate-800 font-bold uppercase">[{savedData.docType}] {savedData.docNumber} (Acesso Universal)</span>
                   </div>
+                  {savedData.insurancePolicyNumber && (
+                    <>
+                      <div className="flex p-4 justify-between items-center bg-white">
+                        <span className="text-slate-400 uppercase font-bold">Seguradora Veicular:</span>
+                        <span className="text-primary font-bold uppercase">{savedData.insuranceCompany || 'Porto Seguro / Allianz'}</span>
+                      </div>
+                      <div className="flex p-4 justify-between items-center bg-white">
+                        <span className="text-slate-400 uppercase font-bold">Apólice de Seguro Obrigatório:</span>
+                        <span className="text-slate-800 font-bold uppercase">{savedData.insurancePolicyNumber}</span>
+                      </div>
+                      <div className="flex p-4 justify-between items-center bg-white">
+                        <span className="text-slate-400 uppercase font-bold">Cobertura Registrada:</span>
+                        <span className="text-emerald-600 font-bold uppercase">{savedData.insuranceCoverageType || 'Total: Passageiros + Terceiros RCF-V'}</span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex p-4 justify-between items-center bg-white">
                     <span className="text-slate-400 uppercase font-bold">Status de Integridade:</span>
                     <span className="text-emerald-600 font-bold uppercase">VERIFY_PASS_SECURE</span>
                   </div>
                   <div className="flex p-4 justify-between items-center bg-white">
-                    <span className="text-slate-400 uppercase font-bold">Testemunha Criptográfica (Witness):</span>
+                    <span className="text-slate-400 uppercase font-bold">Testemunha Criptográfica:</span>
                     <span className="text-primary font-bold uppercase">{savedData.witnessHash}</span>
                   </div>
                   <div className="flex p-4 justify-between items-center bg-white">
@@ -325,11 +361,11 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
                     <span className="text-slate-500 font-bold uppercase">{savedData.timestamp}</span>
                   </div>
                   <div className="p-4 bg-white space-y-2">
-                    <span className="text-slate-400 uppercase font-bold block mb-1">Arquivos Anexados:</span>
+                    <span className="text-slate-400 uppercase font-bold block mb-1">Arquivos & Apólices Anexadas:</span>
                     {savedData.uploadedFiles.map((file: string, idx: number) => (
                       <div key={idx} className="flex items-center gap-2 text-slate-600">
                         <FileText className="w-4 h-4 text-primary shrink-0" />
-                        <span className="text-[10px] break-all">{file} (Carregado com sucesso)</span>
+                        <span className="text-[10px] break-all">{file} (Validado no Enclave)</span>
                       </div>
                     ))}
                   </div>
@@ -358,11 +394,14 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="p-4 bg-slate-50 border border-slate-100 flex items-start gap-3 rounded-lg">
                 <Lock className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[10.5px] text-slate-500 leading-relaxed uppercase tracking-wide font-medium">
+                <div className="space-y-1">
+                  <p className="text-[10.5px] text-slate-700 leading-relaxed uppercase tracking-wide font-bold">
+                    ISENÇÃO DE RESTRIÇÃO POR PAÍS & SEGURO VEICULAR OBRIGATÓRIO:
+                  </p>
+                  <p className="text-[10px] text-slate-500 leading-relaxed uppercase tracking-wide">
                     {role === 'provider' 
-                      ? 'Requisitos legais de integridade para prestadores de serviços: RG, CNH, antecedentes criminais atualizados e comprovante de endereço.' 
-                      : 'Requisitos legais de segurança para passageiros/recebedores: RG/Passaporte de identificação de rede de alta segurança e declaração de conduta.'
+                      ? 'Eliminadas as barreiras burocráticas que exigiam habilitação comercial específica por país. Qualquer CNH ou ID padrão é aceito universalmente, sendo ESTRITAMENTE OBRIGATÓRIO possuir apólice de SEGURO VEICULAR ATIVA cobrindo passageiros e terceiros.' 
+                      : 'Requisitos legais de segurança para passageiros/recebedores: RG, CPF ou Passaporte de identificação na rede de alta segurança e declaração de conduta.'
                     }
                   </p>
                 </div>
@@ -388,7 +427,7 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[9px] font-mono uppercase tracking-widest text-slate-400 mb-2 font-bold">
-                      Tipo de ID Documento
+                      Tipo de Identificação (Livre de Restrição Específica)
                     </label>
                     <select
                       value={docType}
@@ -397,15 +436,15 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
                     >
                       {role === 'provider' ? (
                         <>
-                          <option value="CNH">CNH / Carteira de Habilitação</option>
-                          <option value="RG">RG / Registro Geral</option>
-                          <option value="Passaporte">Passaporte Nacional</option>
+                          <option value="CNH / Habilitação Padrão">CNH / Carteira de Habilitação Padrão (Sem exigência de EAR/Comercial)</option>
+                          <option value="RG / Identidade Civil">RG / Identidade Civil Nacional</option>
+                          <option value="Passaporte Internacional">Passaporte Internacional Válido</option>
                         </>
                       ) : (
                         <>
-                          <option value="RG">RG / Registro Geral</option>
-                          <option value="CPF">CPF / Cadastro Físico</option>
-                          <option value="Passaporte">Passaporte Nacional</option>
+                          <option value="RG / Registro Geral">RG / Registro Geral</option>
+                          <option value="CPF / Cadastro Físico">CPF / Cadastro de Pessoa Física</option>
+                          <option value="Passaporte">Passaporte Nacional ou Internacional</option>
                         </>
                       )}
                     </select>
@@ -418,7 +457,7 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
                     <input
                       type="text"
                       required
-                      placeholder="EX: 12.345.678-x"
+                      placeholder="EX: 12.345.678-X / NÚMERO CNH"
                       value={docNumber}
                       onChange={(e) => setDocNumber(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 p-3 text-xs font-mono uppercase outline-none focus:border-primary transition-colors text-foreground tracking-wide font-bold rounded-lg"
@@ -426,10 +465,82 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
                   </div>
                 </div>
 
+                {/* Mandatory Vehicle Insurance Section for Providers */}
+                {role === 'provider' && (
+                  <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-4">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-primary" />
+                      <h4 className="text-[10.5px] font-mono uppercase tracking-wider font-extrabold text-primary">
+                        SEGURO VEICULAR OBRIGATÓRIO (EXIGÊNCIA A TODOS OS VEÍCULOS)
+                      </h4>
+                    </div>
+                    <p className="text-[9.5px] text-slate-500 uppercase tracking-wide leading-relaxed">
+                      Para garantir a segurança jurídica e física sem necessidade de licenças municipais fechadas, todo veículo parceiro deve possuir seguro veicular regularizado com cobertura contra terceiros e ocupantes.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[9px] font-mono uppercase tracking-widest text-slate-400 mb-1.5 font-bold">
+                          Companhia Seguradora do Veículo
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="EX: PORTO SEGURO, ALLIANZ, ZURICH, BRADESCO"
+                          value={insuranceCompany}
+                          onChange={(e) => setInsuranceCompany(e.target.value)}
+                          className="w-full bg-white border border-slate-200 p-2.5 text-xs font-mono uppercase outline-none focus:border-primary rounded-lg text-foreground font-bold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[9px] font-mono uppercase tracking-widest text-slate-400 mb-1.5 font-bold">
+                          Número da Apólice de Seguro Veicular *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="EX: POL-2026-99381-BR"
+                          value={insurancePolicyNumber}
+                          onChange={(e) => setInsurancePolicyNumber(e.target.value.toUpperCase())}
+                          className="w-full bg-white border border-slate-200 p-2.5 text-xs font-mono uppercase outline-none focus:border-primary rounded-lg text-foreground font-bold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[9px] font-mono uppercase tracking-widest text-slate-400 mb-1.5 font-bold">
+                          Tipo de Cobertura do Seguro
+                        </label>
+                        <select
+                          value={insuranceCoverageType}
+                          onChange={(e) => setInsuranceCoverageType(e.target.value)}
+                          className="w-full bg-white border border-slate-200 p-2.5 text-xs font-mono uppercase outline-none focus:border-primary rounded-lg text-foreground font-bold"
+                        >
+                          <option value="Cobertura Total (RCF-V + Passageiros e Terceiros)">Cobertura Total (RCF-V + Passageiros e Terceiros)</option>
+                          <option value="Compreensiva + Danos Corporais e Materiais">Compreensiva + Danos Corporais e Materiais</option>
+                          <option value="Seguro de Frota / Transporte Compartilhado">Seguro de Frota / Transporte Compartilhado</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[9px] font-mono uppercase tracking-widest text-slate-400 mb-1.5 font-bold">
+                          Vigência / Validade da Apólice
+                        </label>
+                        <input
+                          type="date"
+                          value={insuranceExpiry}
+                          onChange={(e) => setInsuranceExpiry(e.target.value)}
+                          className="w-full bg-white border border-slate-200 p-2.5 text-xs font-mono uppercase outline-none focus:border-primary rounded-lg text-foreground font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* File Upload Zone */}
                 <div>
                   <label className="block text-[9px] font-mono uppercase tracking-widest text-slate-400 mb-2 font-bold">
-                    Carregar Provas e Documentos Oficiais (.PDF, .JPG, .PNG)
+                    Carregar Documento e Apólice de Seguro (.PDF, .JPG, .PNG)
                   </label>
                   
                   <div
@@ -467,7 +578,7 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
                             </p>
                             <p className="text-[8px] font-mono text-slate-400 uppercase tracking-widest mt-1">
                               {role === 'provider' 
-                                ? 'Necessário: Foto do ID + Antecedente Criminal (.pdf ou .jpg)' 
+                                ? 'Necessário: Documento de Identificação/CNH + Comprovante da Apólice de Seguro Veicular (.pdf ou .jpg)' 
                                 : 'Necessário: Documento de Identidade válido (.pdf ou .jpg)'
                               }
                             </p>
@@ -511,7 +622,7 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
                     className="mt-1 w-4 h-4 border-slate-300 text-primary focus:ring-primary rounded cursor-pointer"
                   />
                   <label htmlFor="compliance-consent" className="text-[9.5px] uppercase font-mono tracking-wide text-slate-400 leading-relaxed font-bold cursor-pointer select-none">
-                    Declaro sob as leis de proteção de dados e integridade que os documentos fornecidos são autênticos e autorizo a verificação criptográfica automática.
+                    Declaro sob as leis de proteção de dados e integridade que os documentos e a apólice de seguro veicular fornecidos são autênticos, ativos e autorizo a verificação criptográfica automática.
                   </label>
                 </div>
               </div>
@@ -527,14 +638,14 @@ export const ComplianceVerifier: React.FC<ComplianceVerifierProps> = ({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={saving || !fullName || !docNumber || uploadedFiles.length === 0 || !termsAccepted}
+                  disabled={saving || !fullName || !docNumber || uploadedFiles.length === 0 || !termsAccepted || (role === 'provider' && !insurancePolicyNumber)}
                   className="flex-1 h-12 bg-primary text-white font-bold uppercase tracking-widest text-[9px] shadow-lg shadow-primary/20 cursor-pointer"
                 >
                   {saving ? (
                     <div className="flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" /> Registrando...
                     </div>
-                  ) : "Autenticar & Registrar L-0"}
+                  ) : "Autenticar & Registrar L-0 com Seguro"}
                 </Button>
               </div>
             </form>

@@ -437,15 +437,33 @@ export const RideHailingMap: React.FC<{ onClose: () => void }> = ({ onClose }) =
                   </div>
                 </div>
 
-                <div className="space-y-2 text-left mb-8">
+                <div className="space-y-2 text-left mb-6">
                    <div className="flex justify-between text-[10px] font-mono border-b border-slate-50 pb-2">
                       <span className="text-slate-400 font-bold">UNIT_ASSIGNED</span>
                       <span className="text-foreground font-bold">{selectedDriver.label}</span>
                    </div>
                    <div className="flex justify-between text-[10px] font-mono border-b border-slate-50 pb-2">
-                      <span className="text-slate-400 font-bold">LICENSE_ID</span>
-                      <span className="text-foreground font-bold">AG-OP-004{selectedDriver.id.split('-')[1]}</span>
+                      <span className="text-slate-400 font-bold">HABILITAÇÃO / ID</span>
+                      <span className="text-foreground font-bold">CNH / ID PADRÃO (GLOBAL)</span>
                    </div>
+                   <div className="flex justify-between text-[10px] font-mono border-b border-slate-50 pb-2">
+                      <span className="text-slate-400 font-bold">SEGURO OBRIGATÓRIO</span>
+                      <span className="text-emerald-600 font-bold">ATIVO (COBERTURA 100%)</span>
+                   </div>
+                   <div className="flex justify-between text-[10px] font-mono border-b border-slate-50 pb-2">
+                      <span className="text-slate-400 font-bold">APÓLICE VEICULAR</span>
+                      <span className="text-primary font-bold">POL-ALLIANZ-2026-{selectedDriver.id.split('-')[1]}</span>
+                   </div>
+                </div>
+
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg mb-6 text-left">
+                  <div className="flex items-center gap-2 mb-1">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="text-[9.5px] font-mono font-bold text-emerald-800 uppercase">Seguro Veicular Homologado</span>
+                  </div>
+                  <p className="text-[8.5px] text-emerald-700 font-mono leading-relaxed">
+                    Veículo coberto por apólice obrigatória com proteção total a passageiros e terceiros, sem restrições de habilitação regional específica.
+                  </p>
                 </div>
 
                 <Button 

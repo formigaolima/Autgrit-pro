@@ -1004,13 +1004,16 @@ export default function App() {
                   PRESTADORES DE SERVIÇOS
                 </h3>
                 <p className="text-[11.5px] font-mono text-slate-400 leading-relaxed mb-8 uppercase tracking-wide">
-                  Seja um motorista parceiro, sober-pilot, entregador ou técnico local. Cadastre seus documentos obrigatórios como CNH, RG, comprovante de residência e certidões criminais de segurança para autorização imediata nos serviços urbanos. No Enclave de Dados AutGrit, as informações são criptografadas localmente com nível de sigilo total e reservateza de ponta.
+                  Seja um motorista parceiro, sober-pilot, entregador ou condutor. Isento de habilitação comercial específica por país (aceita qualquer CNH ou ID civil padrão), sendo <strong>estritamente obrigatório a todos possuir Seguro Veicular ativo</strong> com cobertura total a passageiros e terceiros. No Enclave AutGrit, suas apólices e dados são criptografados com sigilo L0 absoluto.
                 </p>
 
                 {providerCompliance && (
                   <div className="p-4 bg-white/5 border border-white/5 rounded-lg mb-6 font-mono text-[10px] space-y-2">
                     <p className="text-slate-450">NOME: <span className="text-white font-bold">{providerCompliance.fullName}</span></p>
                     <p className="text-slate-450">REGISTRO: <span className="text-white font-bold">{providerCompliance.docType} {providerCompliance.docNumber}</span></p>
+                    {providerCompliance.insurancePolicyNumber && (
+                      <p className="text-slate-450">SEGURO VEICULAR: <span className="text-emerald-400 font-bold">OBRIGATÓRIO ATIVO ({providerCompliance.insurancePolicyNumber})</span></p>
+                    )}
                     <p className="text-slate-450">CHAVE HASH: <span className="text-primary font-bold">{providerCompliance.witnessHash}</span></p>
                   </div>
                 )}
